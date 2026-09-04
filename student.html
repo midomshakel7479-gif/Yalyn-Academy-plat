@@ -6,7 +6,7 @@
 <title>منصة الطالب — YALYN Academy</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050817;--panel:#0b1230cc;--line:#ffffff14;--text:#f7f8ff;--muted:#a5aec8;--violet:#8b5cf6;--cyan:#22d3ee;--gold:#fbbf24;--green:#34d399}
+:root{--bg:#050817;--panel:#0b1230cc;--line:#ffffff14;--text:#f7f8ff;--muted:#a5aec8;--violet:#8b5cf6;--cyan:#22d3ee;--gold:#fbbf24;--green:#34d399;--red:#fb7185}
 *{box-sizing:border-box}body{margin:0;color:var(--text);font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 15% 0%,#32116e 0,transparent 30%),radial-gradient(circle at 95% 20%,#003e5d 0,transparent 27%),var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
 .app-card{width:min(750px,100%);background:linear-gradient(145deg,#0e1535d9,#080d21dd);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:0 25px 60px #0008;backdrop-filter:blur(20px)}
 .btn{border:0;color:white;padding:12px 20px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);font-weight:700;cursor:pointer;transition:.2s;width:100%;font-size:15px}
@@ -24,6 +24,12 @@
 .choice-label:hover{background:#ffffff14}
 .choice-label input[type="radio"]{accent-color:#7c3aed;width:18px;height:18px}
 .complete-input{direction:ltr;text-align:left}
+
+.review-box{border-radius:16px;padding:18px;margin-bottom:15px;border:1px solid var(--line);background:#ffffff04;direction:ltr;text-align:left}
+.review-correct{border-left:5px solid var(--green)}
+.review-wrong{border-left:5px solid var(--red)}
+.review-badge-ok{background:#34d39922;color:var(--green);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:bold}
+.review-badge-err{background:#fb718522;color:var(--red);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:bold}
 </style>
 </head>
 <body>
@@ -67,6 +73,16 @@
     <button class="btn" id="finishExamBtn" onclick="submitExam()" style="margin-top:10px;background:linear-gradient(135deg,#34d399,#06b6d4)">إنهاء الامتحان (Finish)</button>
     <div id="examStatusMsg" style="text-align:center;color:#fb7185;margin-top:12px;font-size:14px;font-weight:bold"></div>
   </div>
+
+  <div id="reviewView" style="display:none">
+    <div style="text-align:center;margin-bottom:25px">
+      <h2 style="margin:0;color:var(--cyan)">نتيجة الاختبار</h2>
+      <div id="finalScoreBadge" style="display:inline-block;padding:8px 22px;border-radius:30px;background:#34d39922;color:var(--green);font-size:24px;font-weight:800;margin:15px 0"></div>
+      <p style="color:var(--muted);font-size:14px;margin:0">راجع تفاصيل إجاباتك والإجابات النموذجية بالأسفل:</p>
+    </div>
+    <div id="reviewRenderBox" style="max-height:480px;overflow-y:auto;margin-bottom:20px;padding-right:5px"></div>
+    <button class="btn" onclick="loadDashboard()">العودة إلى الصفحة الرئيسية</button>
+  </div>
 </div>
 
 <script src="config.js"></script>
@@ -106,6 +122,7 @@ async function studentLogin() {
 async function loadDashboard() {
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('examView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'none';
   document.getElementById('dashboardView').style.display = 'block';
 
   document.getElementById('dashStudentName').textContent = `مرحباً بك، ${currentStudent.name}`;
@@ -181,6 +198,7 @@ async function startExam(examId, encodedTitle) {
   }
 
   document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'none';
   document.getElementById('examView').style.display = 'block';
   document.getElementById('currentExamTitle').textContent = examTitle;
   document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:30px;color:var(--cyan)'>جاري تحميل الأسئلة...</div>";
@@ -234,6 +252,8 @@ async function startExam(examId, encodedTitle) {
 
 async function submitExam() {
   let score = 0;
+  const reviewList = [];
+
   activeExamQuestions.forEach((q, idx) => {
     let studentAns = "";
     const isMcq = toStr(q.choice1) !== "";
@@ -245,9 +265,17 @@ async function submitExam() {
       if(inp) studentAns = toStr(inp.value);
     }
 
-    if(studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase()) {
+    const isCorrect = studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase();
+    if(isCorrect) {
       score++;
     }
+
+    reviewList.push({
+      question: toStr(q.question),
+      studentAns: studentAns || "لم تجب (No Answer)",
+      correctAns: toStr(q.correctAnswer),
+      isCorrect: isCorrect
+    });
   });
 
   const finishBtn = document.getElementById('finishExamBtn');
@@ -273,14 +301,35 @@ async function submitExam() {
 
     studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
 
-    document.getElementById('examStatusMsg').style.color = "#34d399";
-    document.getElementById('examStatusMsg').textContent = "تم إنهاء الاختبار بنجاح — جاري نقلك للوحة الرئيسية...";
-    
-    setTimeout(() => {
-      finishBtn.disabled = false;
-      finishBtn.textContent = "إنهاء الامتحان (Finish)";
-      loadDashboard();
-    }, 1500);
+    finishBtn.disabled = false;
+    finishBtn.textContent = "إنهاء الامتحان (Finish)";
+    document.getElementById('examView').style.display = 'none';
+    document.getElementById('reviewView').style.display = 'block';
+    document.getElementById('finalScoreBadge').textContent = finalScoreString;
+
+    const reviewBox = document.getElementById('reviewRenderBox');
+    reviewBox.innerHTML = "";
+
+    reviewList.forEach((item, i) => {
+      reviewBox.innerHTML += `
+        <div class="review-box ${item.isCorrect ? 'review-correct' : 'review-wrong'}">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+            <span style="font-weight:bold;color:#fff">${i + 1}. ${item.question}</span>
+            <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}">
+              ${item.isCorrect ? 'إجابة صحيحة ✓' : 'إجابة خاطئة ✗'}
+            </span>
+          </div>
+          <div style="font-size:14px;margin-bottom:6px">
+            إجابتك: <span style="font-weight:bold;color:${item.isCorrect ? 'var(--green)' : 'var(--red)'}">${item.studentAns}</span>
+          </div>
+          ${!item.isCorrect ? `
+            <div style="font-size:14px;color:var(--green)">
+              الإجابة النموذجية الصحيحة: <b>${item.correctAns}</b>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    });
 
   } catch(e) {
     document.getElementById('examStatusMsg').textContent = "حدث خطأ أثناء حفظ النتيجة، حاول مرة أخرى.";
@@ -293,6 +342,7 @@ function logout() {
   document.getElementById('studentCode').value = '';
   document.getElementById('dashboardView').style.display = 'none';
   document.getElementById('examView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'none';
   document.getElementById('loginView').style.display = 'block';
 }
 </script>
