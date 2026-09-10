@@ -101,6 +101,11 @@ body {
 }
 .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
 .btn:disabled { background: #333; color: #777; border-color: #555; box-shadow: none; cursor: not-allowed; transform: none; }
+.btn-outline {
+  background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold-main); color: var(--gold-main);
+  box-shadow: none; padding: 6px 12px; font-size: 13px; font-weight: bold; border-radius: 8px; width: auto;
+}
+.btn-outline:hover { background: rgba(251, 191, 36, 0.2); }
 
 /* كروت الأسئلة (3D Box) */
 .q-card {
@@ -159,7 +164,7 @@ body {
 <body>
 
 <div class="app-card" id="app">
-  <!-- واجهة تسجيل الدخول (مطابقة للصورة 3D Black & Gold) -->
+  <!-- واجهة تسجيل الدخول -->
   <div id="loginView">
     <div style="text-align:center;margin-bottom:30px">
       <div class="brand-title" dir="ltr">YALYAN</div>
@@ -199,7 +204,7 @@ body {
     <div id="historyListContainer"></div>
   </div>
 
-  <!-- واجهة أداء الامتحان (3D Gold Boxes) -->
+  <!-- واجهة أداء الامتحان -->
   <div id="examView" style="display:none">
     <div class="top-logo">
       <h3 dir="ltr">YALYAN ACADEMY</h3>
@@ -240,6 +245,7 @@ const cfg = window.YALYN_CONFIG || {};
 let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
+let globalStudentResults = []; // لتخزين النتائج للمراجعة لاحقا
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
@@ -295,14 +301,22 @@ async function loadDashboard() {
     
     const data = await res.json();
     studentCompletedExamIds.clear();
+    globalStudentResults = data.results || [];
     
-    if(data.results && data.results.length > 0) {
+    if(globalStudentResults.length > 0) {
       historyBox.innerHTML = "";
-      data.results.forEach(r => {
+      globalStudentResults.forEach((r, idx) => {
         studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
+        
+        // إذا كان تقرير المراجعة متوفراً في الشيت، نعرض زر المراجعة
+        const reviewBtn = r.reviewData ? `<button class="btn-outline" onclick="openPastReview(${idx})">👁️ مراجعة</button>` : '';
+
         historyBox.innerHTML += `
           <div class="exam-item">
-            <span class="pill" style="direction:ltr;display:inline-block;">${r.score}</span>
+            <div style="display:flex;align-items:center;gap:15px;">
+               <span class="pill" style="direction:ltr;display:inline-block;">${r.score}</span>
+               ${reviewBtn}
+            </div>
             <div style="text-align:left">
               <b style="font-size:16px;">${r.examTitle}</b>
               <div style="font-size:12px;color:var(--text-muted);margin-top:5px">${r.date}</div>
@@ -432,10 +446,11 @@ async function submitExam() {
   finishBtn.disabled = true;
   finishBtn.textContent = "جاري الحفظ...";
 
-  // تجميد الدرجة (Score Freezing) لمنع تغيرها مستقبلا
+  // تجميد الدرجة 
   const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
   const finalScoreString = `${score} / ${totalQuestions}`;
   const examTitle = document.getElementById('currentExamTitle').textContent;
+  const reviewDataStr = JSON.stringify(reviewList); // تجهيز تقرير الأخطاء
 
   try {
     await fetch(cfg.webAppUrl, {
@@ -447,7 +462,8 @@ async function submitExam() {
         grade: currentStudent.grade,
         examTitle: examTitle,
         score: finalScoreString, 
-        date: new Date().toLocaleDateString('ar-EG')
+        date: new Date().toLocaleDateString('ar-EG'),
+        reviewData: reviewDataStr // إرسال التقرير ليتم حفظه في العمود السادس
       })
     });
 
@@ -455,38 +471,62 @@ async function submitExam() {
 
     finishBtn.disabled = false;
     finishBtn.textContent = "إنهاء الامتحان (Finish)";
-    document.getElementById('examView').style.display = 'none';
-    document.getElementById('reviewView').style.display = 'block';
-    document.getElementById('finalScoreBadge').textContent = finalScoreString;
-
-    const reviewBox = document.getElementById('reviewRenderBox');
-    reviewBox.innerHTML = "";
-
-    reviewList.forEach((item, i) => {
-      reviewBox.innerHTML += `
-        <div class="review-box ${item.isCorrect ? 'review-correct' : 'review-wrong'}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px">
-            <span style="font-weight:bold;color:#fff;font-size:16px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</span>
-            <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}" style="white-space:nowrap;margin-left:10px;">
-              ${item.isCorrect ? '✓' : '✗'}
-            </span>
-          </div>
-          <div style="font-size:15px;margin-bottom:10px;background:#000;padding:10px 15px;border-radius:10px;border:1px solid #333;">
-            Your Answer: <span style="font-weight:bold;color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span>
-          </div>
-          ${!item.isCorrect ? `
-            <div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px 15px;border-radius:10px;border:1px solid rgba(34,197,94,0.2);">
-              Correct Answer: <b>${item.correctAns}</b>
-            </div>
-          ` : ''}
-        </div>
-      `;
-    });
+    
+    // استخدام دالة العرض الموحدة
+    renderReviewScreen(reviewList, finalScoreString);
 
   } catch(e) {
     document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى.";
     finishBtn.disabled = false;
   }
+}
+
+// دالة لفتح المراجعة السابقة في أي وقت من لوحة التحكم
+function openPastReview(idx) {
+  const r = globalStudentResults[idx];
+  if(!r || !r.reviewData) return;
+  
+  let parsedReview = [];
+  try {
+    parsedReview = JSON.parse(r.reviewData);
+  } catch(e) {
+    alert("عذراً، تعذر تحميل بيانات المراجعة.");
+    return;
+  }
+  
+  renderReviewScreen(parsedReview, r.score);
+}
+
+// دالة موحدة لرسم شاشة المراجعة
+function renderReviewScreen(reviewList, scoreStr) {
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('examView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'block';
+  document.getElementById('finalScoreBadge').textContent = scoreStr;
+
+  const reviewBox = document.getElementById('reviewRenderBox');
+  reviewBox.innerHTML = "";
+
+  reviewList.forEach((item, i) => {
+    reviewBox.innerHTML += `
+      <div class="review-box ${item.isCorrect ? 'review-correct' : 'review-wrong'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px">
+          <span style="font-weight:bold;color:#fff;font-size:16px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</span>
+          <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}" style="white-space:nowrap;margin-left:10px;">
+            ${item.isCorrect ? '✓' : '✗'}
+          </span>
+        </div>
+        <div style="font-size:15px;margin-bottom:10px;background:#000;padding:10px 15px;border-radius:10px;border:1px solid #333;">
+          Your Answer: <span style="font-weight:bold;color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span>
+        </div>
+        ${!item.isCorrect ? `
+          <div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px 15px;border-radius:10px;border:1px solid rgba(34,197,94,0.2);">
+            Correct Answer: <b>${item.correctAns}</b>
+          </div>
+        ` : ''}
+      </div>
+    `;
+  });
 }
 
 function logout() {
