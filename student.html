@@ -3,85 +3,185 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- منع الترجمة التلقائية التي تخرب الإجابات -->
+<meta name="google" content="notranslate">
 <title>منصة الطالب — YALYN Academy</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#050817;--panel:#0b1230cc;--line:#ffffff14;--text:#f7f8ff;--muted:#a5aec8;--violet:#8b5cf6;--cyan:#22d3ee;--gold:#fbbf24;--green:#34d399;--red:#fb7185}
-*{box-sizing:border-box}body{margin:0;color:var(--text);font-family:Inter,system-ui,sans-serif;background:radial-gradient(circle at 15% 0%,#32116e 0,transparent 30%),radial-gradient(circle at 95% 20%,#003e5d 0,transparent 27%),var(--bg);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
-.app-card{width:min(750px,100%);background:linear-gradient(145deg,#0e1535d9,#080d21dd);border:1px solid var(--line);border-radius:24px;padding:30px;box-shadow:0 25px 60px #0008;backdrop-filter:blur(20px)}
-.btn{border:0;color:white;padding:12px 20px;border-radius:12px;background:linear-gradient(135deg,#7c3aed,#06b6d4);font-weight:700;cursor:pointer;transition:.2s;width:100%;font-size:15px}
-.btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
-.btn:disabled{background:#ffffff1a;color:#ffffff44;cursor:not-allowed;transform:none}
-.field{width:100%;margin-top:8px;background:#ffffff08;border:1px solid var(--line);border-radius:12px;padding:12px;color:white;outline:0;font-size:15px;box-sizing:border-box}
-.field:focus{border-color:var(--cyan)}
-.exam-item{background:#ffffff05;border:1px solid var(--line);padding:16px 20px;border-radius:16px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.pill{background:#34d39918;color:#5ee8ae;padding:5px 12px;border-radius:99px;font-size:13px;font-weight:700}
-.pill-gray{background:#ffffff14;color:#a5aec8;padding:5px 12px;border-radius:99px;font-size:13px}
+:root {
+  --bg: #050817; --panel: #0b1230cc; --line: #ffffff14; 
+  --text: #f7f8ff; --muted: #a5aec8; --violet: #8b5cf6; 
+  --cyan: #00f2fe; --gold: #fbbf24; --green: #34d399; --red: #fb7185;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--text); font-family: Inter, system-ui, sans-serif;
+  background: radial-gradient(circle at 15% 0%, #32116e 0, transparent 30%),
+              radial-gradient(circle at 95% 20%, #003e5d 0, transparent 27%),
+              var(--bg);
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+}
 
-.q-card{background:#ffffff05;border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:18px;direction:ltr;text-align:left}
-.q-title{font-size:16px;font-weight:600;line-height:1.6;margin-bottom:14px;color:#fff;direction:ltr;text-align:left}
-.choice-label{display:flex;align-items:center;gap:12px;background:#ffffff08;border:1px solid var(--line);padding:12px 16px;border-radius:12px;margin-bottom:8px;cursor:pointer;transition:.2s;direction:ltr;text-align:left}
-.choice-label:hover{background:#ffffff14}
-.choice-label input[type="radio"]{accent-color:#7c3aed;width:18px;height:18px}
-.complete-input{direction:ltr;text-align:left}
+/* بطاقة التطبيق الرئيسية (تأثير زجاجي متقدم) */
+.app-card {
+  width: min(750px, 100%);
+  background: linear-gradient(145deg, rgba(14,21,53,0.85), rgba(8,13,33,0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 28px;
+  padding: 40px;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+  backdrop-filter: blur(25px);
+}
 
-.review-box{border-radius:16px;padding:18px;margin-bottom:15px;border:1px solid var(--line);background:#ffffff04;direction:ltr;text-align:left}
-.review-correct{border-left:5px solid var(--green)}
-.review-wrong{border-left:5px solid var(--red)}
-.review-badge-ok{background:#34d39922;color:var(--green);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:bold}
-.review-badge-err{background:#fb718522;color:var(--red);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:bold}
+/* الشعار العائم */
+.logo-icon {
+  font-size: 55px; margin-bottom: 10px; display: inline-block;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(251, 191, 36, 0.6));
+  animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+/* اسم المنصة ثلاثي الأبعاد ومضيء */
+.brand-title {
+  font-size: 42px; margin: 0; font-weight: 900;
+  color: #fff; letter-spacing: 2px;
+  text-shadow: 
+    0 1px 0 #cccccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9,
+    0 6px 1px rgba(0,0,0,0.1), 0 0 10px rgba(0,242,254,0.3),
+    0 1px 3px rgba(0,0,0,0.3), 0 3px 5px rgba(0,0,0,0.2),
+    0 5px 10px rgba(0,0,0,0.25), 0 20px 20px rgba(0,0,0,0.15),
+    0 0 25px var(--cyan), 0 0 45px var(--cyan);
+}
+
+/* مربعات النصوص جذابة ومضيئة */
+.field {
+  width: 100%; margin-top: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px; padding: 15px 18px;
+  color: white; outline: 0; font-size: 16px;
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.field::placeholder { color: rgba(165, 174, 200, 0.5); }
+.field:focus {
+  border-color: var(--cyan);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 3px 6px rgba(0,0,0,0.2), 0 0 20px rgba(0, 242, 254, 0.4);
+  transform: translateY(-2px);
+}
+
+/* الأزرار العصرية المضيئة */
+.btn {
+  border: 0; color: white; padding: 14px 24px; border-radius: 14px;
+  background: linear-gradient(135deg, #7c3aed, #06b6d4);
+  font-weight: 700; cursor: pointer; transition: all 0.3s ease;
+  width: 100%; font-size: 16px; letter-spacing: 0.5px;
+  box-shadow: 0 5px 15px rgba(6, 182, 212, 0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(6, 182, 212, 0.5);
+  filter: brightness(1.15);
+}
+.btn:disabled {
+  background: #ffffff1a; color: #ffffff44; box-shadow: none;
+  cursor: not-allowed; transform: none; border: none;
+}
+
+/* باقي التنسيقات (كروت الأسئلة والنتائج) */
+.exam-item {
+  background: rgba(255, 255, 255, 0.03); border: 1px solid var(--line);
+  padding: 18px 22px; border-radius: 18px; margin-bottom: 14px;
+  display: flex; justify-content: space-between; align-items: center;
+  transition: 0.3s;
+}
+.exam-item:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(255,255,255,0.2); }
+.pill { background: #34d39918; color: #5ee8ae; padding: 6px 14px; border-radius: 99px; font-size: 14px; font-weight: 700; box-shadow: 0 0 10px rgba(52, 211, 153, 0.2); }
+.pill-gray { background: #ffffff14; color: #a5aec8; padding: 6px 14px; border-radius: 99px; font-size: 13px; }
+
+.q-card {
+  background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+}
+.q-title { font-size: 17px; font-weight: 700; line-height: 1.6; margin-bottom: 16px; color: #fff; direction: ltr; text-align: left; }
+.choice-label {
+  display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line); padding: 14px 18px; border-radius: 14px; margin-bottom: 10px;
+  cursor: pointer; transition: 0.2s; direction: ltr; text-align: left; font-size: 15.5px;
+}
+.choice-label:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); transform: translateX(5px); }
+.choice-label input[type="radio"] { accent-color: #00f2fe; width: 20px; height: 20px; cursor: pointer; }
+.complete-input { direction: ltr; text-align: left; }
+
+.review-box { border-radius: 18px; padding: 20px; margin-bottom: 15px; border: 1px solid var(--line); background: rgba(255,255,255,0.02); direction: ltr; text-align: left; }
+.review-correct { border-left: 5px solid var(--green); box-shadow: -5px 0 15px rgba(52,211,153,0.1); }
+.review-wrong { border-left: 5px solid var(--red); box-shadow: -5px 0 15px rgba(251,113,133,0.1); }
+.review-badge-ok { background: #34d39922; color: var(--green); padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; }
+.review-badge-err { background: #fb718522; color: var(--red); padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; }
 </style>
 </head>
 <body>
 
 <div class="app-card" id="app">
+  <!-- واجهة تسجيل الدخول -->
   <div id="loginView">
-    <div style="text-align:center;margin-bottom:25px">
-      <div style="font-size:40px;margin-bottom:10px">∑</div>
-      <h2 style="margin:0;color:var(--cyan)">YALYN Academy</h2>
-      <p style="color:var(--muted);font-size:14px;margin-top:5px">منصة اختبارات الطلاب الذكية</p>
+    <div style="text-align:center;margin-bottom:35px">
+      <div class="logo-icon">∑</div>
+      <h2 class="brand-title" dir="ltr">YALYN Academy</h2>
+      <p style="color:var(--muted);font-size:15px;margin-top:15px;font-weight:500;">منصة اختبارات الطلاب الذكية</p>
     </div>
-    <label style="color:var(--muted);font-size:13px">الرقم السري للطالب (Code):
-      <input type="password" id="studentCode" class="field" placeholder="أدخل كود الطالب المكون من 4 أرقام" style="text-align:center;font-size:18px;letter-spacing:4px">
-    </label>
-    <button class="btn" onclick="studentLogin()" style="margin-top:20px">دخول</button>
-    <div id="loginError" style="color:#fb7185;font-size:13px;text-align:center;margin-top:12px"></div>
+    <label style="color:var(--muted);font-size:14px;font-weight:600;display:block;margin-bottom:5px;">الرقم السري للطالب (Code):</label>
+    <input type="password" id="studentCode" class="field" placeholder="أدخل كود الطالب المكون من 4 أرقام" style="text-align:center;font-size:20px;letter-spacing:6px;font-weight:bold;">
+    <button class="btn" onclick="studentLogin()" style="margin-top:25px;font-size:18px;">دخول آمن</button>
+    <div id="loginError" style="color:#fb7185;font-size:14px;text-align:center;margin-top:15px;font-weight:600;"></div>
   </div>
 
+  <!-- لوحة تحكم الطالب -->
   <div id="dashboardView" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:rgba(255,255,255,0.02);padding:15px 20px;border-radius:18px;border:1px solid rgba(255,255,255,0.05);">
       <div>
-        <h2 id="dashStudentName" style="margin:0;color:var(--cyan)"></h2>
-        <span id="dashStudentGrade" style="color:var(--muted);font-size:13px"></span>
+        <h2 id="dashStudentName" style="margin:0;color:#fff;font-size:20px;"></h2>
+        <span id="dashStudentGrade" style="color:var(--cyan);font-size:14px;font-weight:600;display:inline-block;margin-top:5px;"></span>
       </div>
-      <button onclick="logout()" style="background:transparent;border:1px solid var(--line);color:var(--muted);padding:8px 14px;border-radius:10px;cursor:pointer">خروج</button>
+      <button onclick="logout()" style="background:rgba(251,113,133,0.1);border:1px solid rgba(251,113,133,0.3);color:var(--red);padding:10px 18px;border-radius:12px;cursor:pointer;font-weight:bold;transition:0.3s;">خروج</button>
     </div>
 
-    <h3 style="font-size:15px;color:var(--gold);margin:20px 0 10px">الامتحانات المتاحة:</h3>
+    <h3 style="font-size:17px;color:var(--gold);margin:25px 0 15px;display:flex;align-items:center;gap:8px;">🎯 الامتحانات المتاحة:</h3>
     <div id="examsListContainer"></div>
 
-    <h3 style="font-size:15px;color:#a5aec8;margin:30px 0 10px">📊 سجل درجاتي السابقة:</h3>
+    <h3 style="font-size:17px;color:var(--cyan);margin:35px 0 15px;display:flex;align-items:center;gap:8px;">📊 سجل درجاتي السابقة:</h3>
     <div id="historyListContainer"></div>
   </div>
 
+  <!-- واجهة أداء الامتحان -->
   <div id="examView" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;border-bottom:1px solid var(--line);padding-bottom:15px">
-      <h3 id="currentExamTitle" style="margin:0;color:var(--cyan)"></h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:15px">
+      <h3 id="currentExamTitle" style="margin:0;color:var(--cyan);font-size:22px;"></h3>
       <span class="pill" id="questionCountBadge"></span>
     </div>
     <div id="questionsRenderBox"></div>
-    <button class="btn" id="finishExamBtn" onclick="submitExam()" style="margin-top:10px;background:linear-gradient(135deg,#34d399,#06b6d4)">إنهاء الامتحان (Finish)</button>
-    <div id="examStatusMsg" style="text-align:center;color:#fb7185;margin-top:12px;font-size:14px;font-weight:bold"></div>
+    <!-- التعديل: type="button" لمنع الإرسال الخاطئ -->
+    <button type="button" class="btn" id="finishExamBtn" onclick="submitExam()" style="margin-top:15px;background:linear-gradient(135deg,#34d399,#0ea5e9);font-size:18px;">إنهاء الامتحان (Finish)</button>
+    <div id="examStatusMsg" style="text-align:center;color:#fb7185;margin-top:15px;font-size:15px;font-weight:bold"></div>
   </div>
 
+  <!-- واجهة مراجعة النتيجة -->
   <div id="reviewView" style="display:none">
-    <div style="text-align:center;margin-bottom:25px">
-      <h2 style="margin:0;color:var(--cyan)">نتيجة الاختبار</h2>
-      <div id="finalScoreBadge" style="display:inline-block;padding:8px 22px;border-radius:30px;background:#34d39922;color:var(--green);font-size:24px;font-weight:800;margin:15px 0"></div>
-      <p style="color:var(--muted);font-size:14px;margin:0">راجع تفاصيل إجاباتك والإجابات النموذجية بالأسفل:</p>
+    <div style="text-align:center;margin-bottom:30px">
+      <h2 style="margin:0;color:var(--cyan);font-size:28px;">نتيجة الاختبار</h2>
+      <div id="finalScoreBadge" style="display:inline-block;padding:12px 35px;border-radius:50px;background:linear-gradient(135deg, rgba(52,211,153,0.2), rgba(6,182,212,0.2));color:var(--cyan);font-size:32px;font-weight:900;margin:20px 0;direction:ltr;box-shadow:0 0 20px rgba(6,182,212,0.3);border:1px solid rgba(6,182,212,0.3);"></div>
+      <p style="color:var(--muted);font-size:15px;margin:0">راجع تفاصيل إجاباتك والإجابات النموذجية بالأسفل:</p>
     </div>
-    <div id="reviewRenderBox" style="max-height:480px;overflow-y:auto;margin-bottom:20px;padding-right:5px"></div>
-    <button class="btn" onclick="loadDashboard()">العودة إلى الصفحة الرئيسية</button>
+    <div id="reviewRenderBox" style="max-height:500px;overflow-y:auto;margin-bottom:25px;padding-right:8px"></div>
+    <button type="button" class="btn" onclick="loadDashboard()">العودة إلى الصفحة الرئيسية</button>
   </div>
 </div>
 
@@ -97,7 +197,7 @@ const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 async function studentLogin() {
   const code = document.getElementById('studentCode').value.trim();
   const err = document.getElementById('loginError');
-  err.textContent = "جاري التحقق...";
+  err.textContent = "جاري التحقق آمنياً...";
   if(!code) { err.textContent = "يرجى كتابة الرقم السري"; return; }
 
   try {
@@ -115,7 +215,7 @@ async function studentLogin() {
       err.textContent = "الرقم السري غير صحيح أو غير مسجل.";
     }
   } catch(e) {
-    err.textContent = "حدث خطأ في الاتصال بالخادم.";
+    err.textContent = "حدث خطأ في الاتصال بخوادم الأكاديمية.";
   }
 }
 
@@ -130,7 +230,7 @@ async function loadDashboard() {
 
   const examsBox = document.getElementById('examsListContainer');
   const historyBox = document.getElementById('historyListContainer');
-  examsBox.innerHTML = "<div style='color:var(--muted);text-align:center'>جاري تحميل الامتحانات...</div>";
+  examsBox.innerHTML = "<div style='color:var(--cyan);text-align:center;padding:10px;'>جاري تحميل الامتحانات...</div>";
   historyBox.innerHTML = "";
 
   try {
@@ -153,16 +253,17 @@ async function loadDashboard() {
         studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
         historyBox.innerHTML += `
           <div class="exam-item">
-            <span class="pill">${r.score}</span>
+            <!-- ضبط اتجاه الدرجة ليظهر الكسر بشكل سليم -->
+            <span class="pill" style="direction:ltr;display:inline-block;font-size:16px;">${r.score}</span>
             <div style="text-align:left">
-              <b>${r.examTitle}</b>
-              <div style="font-size:11px;color:var(--muted);margin-top:4px">${r.date}</div>
+              <b style="font-size:15px;">${r.examTitle}</b>
+              <div style="font-size:12px;color:var(--muted);margin-top:5px">${r.date}</div>
             </div>
           </div>
         `;
       });
     } else {
-      historyBox.innerHTML = "<div style='color:var(--muted);font-size:13px'>لا توجد اختبارات سابقة مسجلة.</div>";
+      historyBox.innerHTML = "<div style='background:rgba(255,255,255,0.02);padding:15px;border-radius:12px;color:var(--muted);font-size:14px;text-align:center;'>لا توجد اختبارات سابقة مسجلة.</div>";
     }
 
     if(data.exams && data.exams.length > 0) {
@@ -173,16 +274,16 @@ async function loadDashboard() {
           <div class="exam-item">
             ${isDone 
               ? `<span class="pill-gray">تم إنهاؤه مسبقاً ✓</span>` 
-              : `<button class="btn" style="width:auto;padding:8px 18px" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء الاختبار</button>`
+              : `<button class="btn" style="width:auto;padding:10px 22px;font-size:14px;" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء الاختبار</button>`
             }
             <div style="text-align:left">
-              <b style="font-size:16px;color:var(--cyan)">${ex.examTitle}</b>
+              <b style="font-size:17px;color:var(--gold)">${ex.examTitle}</b>
             </div>
           </div>
         `;
       });
     } else {
-      examsBox.innerHTML = "<div style='color:#fb7185;font-size:13px'>لا توجد اختبارات متاحة حالياً.</div>";
+      examsBox.innerHTML = "<div style='background:rgba(251,113,133,0.05);padding:15px;border-radius:12px;color:#fb7185;font-size:14px;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
     }
 
   } catch(e) {
@@ -201,7 +302,7 @@ async function startExam(examId, encodedTitle) {
   document.getElementById('reviewView').style.display = 'none';
   document.getElementById('examView').style.display = 'block';
   document.getElementById('currentExamTitle').textContent = examTitle;
-  document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:30px;color:var(--cyan)'>جاري تحميل الأسئلة...</div>";
+  document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--cyan);font-size:18px;'>جاري تجهيز الاختبار...</div>";
   document.getElementById('examStatusMsg').textContent = "";
 
   try {
@@ -214,7 +315,7 @@ async function startExam(examId, encodedTitle) {
     activeExamQuestions = data.questions || [];
     
     if (activeExamQuestions.length === 0) {
-      throw new Error("لم يتم العثور على أسئلة لهذا الاختبار في الشيت.");
+      throw new Error("لم يتم العثور على أسئلة نشطة لهذا الاختبار.");
     }
 
     document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} أسئلة`;
@@ -230,7 +331,7 @@ async function startExam(examId, encodedTitle) {
 
       box.innerHTML += `
         <div class="q-card">
-          <div class="q-title">${idx + 1}. ${toStr(q.question)}</div>
+          <div class="q-title"><span style="color:var(--cyan);margin-right:5px;">${idx + 1}.</span> ${toStr(q.question)}</div>
           ${isMcq ? `
             <div>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
@@ -239,14 +340,15 @@ async function startExam(examId, encodedTitle) {
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c4}"> <span>${c4}</span></label>
             </div>
           ` : `
-            <input type="text" id="complete_ans_${idx}" class="field complete-input" placeholder="Type your answer here...">
+            <!-- منع حدث الإنتر نهائيا من إنهاء الاختبار -->
+            <input type="text" id="complete_ans_${idx}" class="field complete-input" placeholder="Type your answer here..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); return false; }">
           `}
         </div>
       `;
     });
 
   } catch(e) {
-    document.getElementById('questionsRenderBox').innerHTML = `<div style='color:#fb7185;text-align:center;padding:20px'>${e.message || 'فشل تحميل الأسئلة.'}</div>`;
+    document.getElementById('questionsRenderBox').innerHTML = `<div style='background:rgba(251,113,133,0.1);color:#fb7185;text-align:center;padding:25px;border-radius:15px;'>${e.message || 'فشل تحميل الأسئلة.'}</div>`;
   }
 }
 
@@ -280,9 +382,11 @@ async function submitExam() {
 
   const finishBtn = document.getElementById('finishExamBtn');
   finishBtn.disabled = true;
-  finishBtn.textContent = "جاري حفظ النتيجة...";
+  finishBtn.textContent = "جاري الحفظ بأمان...";
 
-  const finalScoreString = `${score} / ${activeExamQuestions.length}`;
+  // تجميد المجموع الكلي
+  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
+  const finalScoreString = `${score} / ${totalQuestions}`;
   const examTitle = document.getElementById('currentExamTitle').textContent;
 
   try {
@@ -294,7 +398,7 @@ async function submitExam() {
         studentName: currentStudent.name,
         grade: currentStudent.grade,
         examTitle: examTitle,
-        score: finalScoreString,
+        score: finalScoreString, 
         date: new Date().toLocaleDateString('ar-EG')
       })
     });
@@ -302,7 +406,7 @@ async function submitExam() {
     studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
 
     finishBtn.disabled = false;
-    finishBtn.textContent = "إنهاء الامتحان (Finish)";
+    finishBtn.textContent = "إنهاء الاختبار (Finish)";
     document.getElementById('examView').style.display = 'none';
     document.getElementById('reviewView').style.display = 'block';
     document.getElementById('finalScoreBadge').textContent = finalScoreString;
@@ -313,18 +417,18 @@ async function submitExam() {
     reviewList.forEach((item, i) => {
       reviewBox.innerHTML += `
         <div class="review-box ${item.isCorrect ? 'review-correct' : 'review-wrong'}">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <span style="font-weight:bold;color:#fff">${i + 1}. ${item.question}</span>
-            <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <span style="font-weight:bold;color:#fff;font-size:15px;line-height:1.5"><span style="color:var(--muted);">${i + 1}.</span> ${item.question}</span>
+            <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}" style="white-space:nowrap;margin-left:10px;">
               ${item.isCorrect ? 'إجابة صحيحة ✓' : 'إجابة خاطئة ✗'}
             </span>
           </div>
-          <div style="font-size:14px;margin-bottom:6px">
-            إجابتك: <span style="font-weight:bold;color:${item.isCorrect ? 'var(--green)' : 'var(--red)'}">${item.studentAns}</span>
+          <div style="font-size:14px;margin-bottom:8px;background:rgba(0,0,0,0.2);padding:8px 12px;border-radius:10px;">
+            إجابتك: <span style="font-weight:bold;font-size:15px;color:${item.isCorrect ? 'var(--green)' : 'var(--red)'}">${item.studentAns}</span>
           </div>
           ${!item.isCorrect ? `
-            <div style="font-size:14px;color:var(--green)">
-              الإجابة النموذجية الصحيحة: <b>${item.correctAns}</b>
+            <div style="font-size:14px;color:var(--green);background:rgba(52,211,153,0.1);padding:8px 12px;border-radius:10px;">
+              الإجابة الصحيحة: <b style="font-size:15px;">${item.correctAns}</b>
             </div>
           ` : ''}
         </div>
@@ -332,7 +436,7 @@ async function submitExam() {
     });
 
   } catch(e) {
-    document.getElementById('examStatusMsg').textContent = "حدث خطأ أثناء حفظ النتيجة، حاول مرة أخرى.";
+    document.getElementById('examStatusMsg').textContent = "حدث خطأ أثناء حفظ النتيجة، يرجى المحاولة مرة أخرى.";
     finishBtn.disabled = false;
   }
 }
