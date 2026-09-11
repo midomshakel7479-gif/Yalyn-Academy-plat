@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- منع الترجمة التلقائية -->
 <meta name="google" content="notranslate">
 <title>YALYN Academy - Student Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
@@ -87,7 +86,6 @@ body {
 <body>
 
 <div class="app-card" id="app">
-  <!-- تسجيل الدخول -->
   <div id="loginView">
     <div style="text-align:center;margin-bottom:30px">
       <div class="brand-title" dir="ltr">YALYAN</div>
@@ -107,7 +105,6 @@ body {
     </div>
   </div>
 
-  <!-- لوحة التحكم -->
   <div id="dashboardView" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:#000;padding:15px 20px;border-radius:18px;border:1px solid rgba(251,191,36,0.2);">
       <div>
@@ -122,7 +119,6 @@ body {
     <div id="historyListContainer"></div>
   </div>
 
-  <!-- واجهة الامتحان -->
   <div id="examView" style="display:none">
     <div class="top-logo"><h3 dir="ltr">YALYAN ACADEMY</h3></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
@@ -134,7 +130,6 @@ body {
     <div id="examStatusMsg" style="text-align:center;color:#f87171;margin-top:15px;font-size:16px;font-weight:bold"></div>
   </div>
 
-  <!-- واجهة المراجعة -->
   <div id="reviewView" style="display:none">
     <div class="top-logo"><h3 dir="ltr">YALYAN ACADEMY</h3></div>
     <div style="text-align:center;margin-bottom:30px">
@@ -263,11 +258,18 @@ async function startExam(examId, encodedTitle) {
       const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
       const isMcq = c1 !== "";
       
-      // التعديل السحري لمعالجة الصور: إضافة referrerpolicy="no-referrer" وتجريد الرابط من المسافات
-      let cleanUrl = toStr(q.image).replace(/['"]/g, '');
+      let cleanUrl = toStr(q.image).replace(/['"]/g, '').trim();
+
+      // معالج ذكي ومحدث لتحويل رابط جوجل درايف إلى رابط عرض مباشر للصورة
+      if (cleanUrl.includes('drive.google.com/file/d/')) {
+        const match = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          cleanUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+        }
+      }
+
       const imageHtml = cleanUrl ? `<div style="text-align:center;"><img src="${cleanUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main); box-shadow:0 8px 20px rgba(0,0,0,0.6);"></div>` : "";
       
-      // معالجة السؤال إذا كان فارغاً (يحتوي على صورة فقط)
       const questionText = toStr(q.question) !== "" ? `<div class="q-title"><span class="q-num">${idx + 1}.</span> ${toStr(q.question)}</div>` : `<div class="q-title"><span class="q-num">${idx + 1}.</span></div>`;
 
       box.innerHTML += `
@@ -341,7 +343,7 @@ function renderReviewScreen(reviewList, scoreStr) {
         <div style="font-size:15px;margin-bottom:10px;background:#000;padding:10px 15px;border-radius:10px;border:1px solid #333;">
           Your Answer: <span style="font-weight:bold;color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span>
         </div>
-        ${!item.isCorrect ? `<div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px 15px;border-radius:10px;border:1px solid rgba(34,197,94,0.2);">Correct Answer: <b>${item.correctAns}</b></div>` : ''}
+        {!item.isCorrect ? `<div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px 15px;border-radius:10px;border:1px solid rgba(34,197,94,0.2);">Correct Answer: <b>${item.correctAns}</b></div>` : ''}
       </div>
     `;
   });
