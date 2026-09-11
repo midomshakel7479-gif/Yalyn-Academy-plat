@@ -260,7 +260,6 @@ async function startExam(examId, encodedTitle) {
       
       let cleanUrl = toStr(q.image).replace(/['"]/g, '').trim();
 
-      // معالج ذكي ومحدث لتحويل رابط جوجل درايف إلى رابط عرض مباشر للصورة
       if (cleanUrl.includes('drive.google.com/file/d/')) {
         const match = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
         if (match && match[1]) {
