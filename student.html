@@ -3,19 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<!-- منع الترجمة التلقائية التي تخرب الإجابات -->
+<!-- منع الترجمة التلقائية -->
 <meta name="google" content="notranslate">
 <title>YALYN Academy - Student Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=Playfair+Display:ital,wght@1,700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg-dark: #0a0a0a;
-  --bg-panel: #141414;
-  --gold-light: #fde047;
-  --gold-main: #fbbf24;
-  --gold-dark: #b45309;
-  --text-main: #ffffff;
-  --text-muted: #9ca3af;
+  --bg-dark: #0a0a0a; --bg-panel: #141414;
+  --gold-light: #fde047; --gold-main: #fbbf24; --gold-dark: #b45309;
+  --text-main: #ffffff; --text-muted: #9ca3af;
   --border-glow: rgba(251, 191, 36, 0.3);
 }
 
@@ -26,17 +22,14 @@ body {
   min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
 }
 
-/* بطاقة التطبيق بخلفية سوداء وتأثير 3D */
 .app-card {
   width: min(750px, 100%);
   background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
   border: 1px solid rgba(251, 191, 36, 0.15);
-  border-radius: 30px;
-  padding: 40px;
+  border-radius: 30px; padding: 40px;
   box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 2px 0 rgba(255,255,255,0.05);
 }
 
-/* شعار الأكاديمية 3D */
 .brand-title {
   font-size: 50px; margin: 0; font-weight: 900;
   background: linear-gradient(to bottom, #fff7d6, #fbb034, #b45309);
@@ -44,150 +37,77 @@ body {
   filter: drop-shadow(0 4px 2px rgba(0,0,0,0.8)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.4));
   letter-spacing: 2px; line-height: 1.1;
 }
-.brand-subtitle {
-  font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 6px;
-  text-transform: uppercase; margin-top: -5px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-}
+.brand-subtitle { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: 6px; text-transform: uppercase; margin-top: -5px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
 
-/* حقل الإدخال الذهبي */
-.input-wrapper {
-  position: relative; margin-top: 20px; margin-bottom: 25px;
-}
-.input-wrapper svg {
-  position: absolute; left: 20px; top: 50%; transform: translateY(-50%);
-  width: 24px; height: 24px; fill: var(--gold-main);
-}
-.field {
-  width: 100%; background: #000;
-  border: 2px solid var(--gold-main);
-  border-radius: 50px; padding: 18px 20px 18px 55px;
-  color: white; outline: 0; font-size: 16px; font-weight: 600;
-  box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 0 15px var(--border-glow);
-  transition: 0.3s;
-}
+.input-wrapper { position: relative; margin-top: 20px; margin-bottom: 25px; }
+.input-wrapper svg { position: absolute; left: 20px; top: 50%; transform: translateY(-50%); width: 24px; height: 24px; fill: var(--gold-main); }
+.field { width: 100%; background: #000; border: 2px solid var(--gold-main); border-radius: 50px; padding: 18px 20px 18px 55px; color: white; outline: 0; font-size: 16px; font-weight: 600; box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 0 15px var(--border-glow); transition: 0.3s; }
 .field::placeholder { color: #6b7280; font-weight: 400; }
 .field:focus { box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), 0 0 25px rgba(251, 191, 36, 0.6); }
 
-/* زر تسجيل الدخول (Login) */
-.btn-login {
-  width: 100%; padding: 16px; border-radius: 50px; border: 2px solid #fff;
-  background: linear-gradient(to bottom, #fde047, #f59e0b);
-  color: #000; font-weight: 900; font-size: 20px; cursor: pointer;
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4), inset 0 -4px 10px rgba(180, 83, 9, 0.5);
-  transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px;
-}
+.btn-login { width: 100%; padding: 16px; border-radius: 50px; border: 2px solid #fff; background: linear-gradient(to bottom, #fde047, #f59e0b); color: #000; font-weight: 900; font-size: 20px; cursor: pointer; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4), inset 0 -4px 10px rgba(180, 83, 9, 0.5); transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
 .btn-login:hover { transform: translateY(-3px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(245, 158, 11, 0.6); }
+.btn-login:disabled { background: #333; color: #777; border-color: #555; box-shadow: none; cursor: not-allowed; transform: none; }
 
-/* شريط التوقيع بالأسفل (Made By) */
-.made-by-box {
-  margin-top: 40px; border: 2px solid var(--gold-main); border-radius: 15px;
-  padding: 15px; background: linear-gradient(145deg, #111, #000);
-  text-align: center; position: relative;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-}
-.made-by-box::before {
-  content: 'Made By :'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-  background: #000; padding: 0 15px; color: var(--gold-main); font-weight: 600; font-size: 14px;
-}
+.made-by-box { margin-top: 40px; border: 2px solid var(--gold-main); border-radius: 15px; padding: 15px; background: linear-gradient(145deg, #111, #000); text-align: center; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+.made-by-box::before { content: 'Made By :'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #000; padding: 0 15px; color: var(--gold-main); font-weight: 600; font-size: 14px; }
 .made-by-name { font-weight: 800; font-size: 18px; color: #fff; margin: 5px 0; }
 .made-by-slogan { font-family: 'Playfair Display', serif; color: var(--gold-main); font-size: 16px; font-style: italic; }
 
-/* أزرار عامة */
-.btn {
-  border: 1px solid var(--gold-main); color: #000; padding: 12px 20px; border-radius: 12px;
-  background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer;
-  transition: 0.2s; width: 100%; font-size: 16px; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3);
-}
+.btn { border: 1px solid var(--gold-main); color: #000; padding: 12px 20px; border-radius: 12px; background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer; transition: 0.2s; width: 100%; font-size: 16px; box-shadow: 0 5px 15px rgba(245, 158, 11, 0.3); }
 .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-.btn:disabled { background: #333; color: #777; border-color: #555; box-shadow: none; cursor: not-allowed; transform: none; }
-.btn-outline {
-  background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold-main); color: var(--gold-main);
-  box-shadow: none; padding: 6px 12px; font-size: 13px; font-weight: bold; border-radius: 8px; width: auto;
-}
+.btn-outline { background: rgba(251, 191, 36, 0.1); border: 1px solid var(--gold-main); color: var(--gold-main); box-shadow: none; padding: 6px 12px; font-size: 13px; font-weight: bold; border-radius: 8px; width: auto; cursor: pointer;}
 .btn-outline:hover { background: rgba(251, 191, 36, 0.2); }
 
-/* كروت الأسئلة (3D Box) */
-.q-card {
-  background: linear-gradient(145deg, #1f1f1f, #0d0d0d);
-  border: 1px solid var(--gold-main);
-  border-bottom: 5px solid var(--gold-dark); /* تأثير العمق */
-  border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left;
-  box-shadow: 0 12px 25px rgba(0,0,0,0.6);
-}
+.q-card { background: linear-gradient(145deg, #1f1f1f, #0d0d0d); border: 1px solid var(--gold-main); border-bottom: 5px solid var(--gold-dark); border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left; box-shadow: 0 12px 25px rgba(0,0,0,0.6); }
 .q-title { font-size: 18px; font-weight: 800; line-height: 1.6; margin-bottom: 18px; color: #fff; }
 .q-num { color: var(--gold-main); margin-right: 5px; }
 
-/* خيارات الاختيار من متعدد */
-.choice-label {
-  display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5);
-  border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px;
-  cursor: pointer; transition: 0.2s; font-size: 16px; font-weight: 600;
-}
+.choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; transition: 0.2s; font-size: 16px; font-weight: 600; }
 .choice-label:hover { background: rgba(251, 191, 36, 0.1); border-color: var(--gold-main); transform: translateX(5px); }
-.choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
+.choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; cursor:pointer;}
 
-/* إكمال الفراغ داخل السؤال */
-.complete-input {
-  width: 100%; background: #000; border: 2px solid rgba(251, 191, 36, 0.5);
-  border-radius: 12px; padding: 15px; color: var(--gold-light); font-size: 16px; font-weight: bold;
-  direction: ltr; text-align: left; transition: 0.3s;
-}
+.complete-input { width: 100%; background: #000; border: 2px solid rgba(251, 191, 36, 0.5); border-radius: 12px; padding: 15px; color: var(--gold-light); font-size: 16px; font-weight: bold; direction: ltr; text-align: left; transition: 0.3s; }
 .complete-input:focus { border-color: var(--gold-main); box-shadow: 0 0 15px var(--border-glow); outline: none; }
 
-/* القوائم والنتائج */
-.exam-item {
-  background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(251, 191, 36, 0.2);
-  padding: 18px 22px; border-radius: 16px; margin-bottom: 14px;
-  display: flex; justify-content: space-between; align-items: center;
-}
+.exam-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(251, 191, 36, 0.2); padding: 18px 22px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
 .pill { background: rgba(251, 191, 36, 0.15); color: var(--gold-light); padding: 6px 14px; border-radius: 99px; font-size: 15px; font-weight: 800; border: 1px solid var(--gold-main); }
 .pill-gray { background: #222; color: #777; padding: 6px 14px; border-radius: 99px; font-size: 13px; border: 1px solid #444; }
 
-/* كروت المراجعة */
 .review-box { border-radius: 18px; padding: 20px; margin-bottom: 15px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); direction: ltr; text-align: left; }
 .review-correct { border-left: 5px solid #22c55e; }
 .review-wrong { border-left: 5px solid #ef4444; }
 .review-badge-ok { background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; }
 .review-badge-err { background: rgba(239, 68, 68, 0.2); color: #f87171; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: bold; }
 
-/* أيقونة الأكاديمية المصغرة العلوية */
-.top-logo {
-  text-align: center; margin-bottom: 20px; border-bottom: 1px solid rgba(251,191,36,0.2); padding-bottom: 15px;
-}
-.top-logo h3 {
-  margin: 0; color: var(--gold-main); font-size: 24px; font-weight: 900; letter-spacing: 2px;
-  text-shadow: 0 2px 10px rgba(251,191,36,0.4);
-}
+.top-logo { text-align: center; margin-bottom: 20px; border-bottom: 1px solid rgba(251,191,36,0.2); padding-bottom: 15px; }
+.top-logo h3 { margin: 0; color: var(--gold-main); font-size: 24px; font-weight: 900; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(251,191,36,0.4); }
 </style>
 </head>
 <body>
 
 <div class="app-card" id="app">
-  <!-- واجهة تسجيل الدخول -->
+  <!-- تسجيل الدخول -->
   <div id="loginView">
     <div style="text-align:center;margin-bottom:30px">
       <div class="brand-title" dir="ltr">YALYAN</div>
       <div class="brand-subtitle" dir="ltr">ACADEMY</div>
     </div>
-    
     <div class="input-wrapper" dir="ltr">
       <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
       <input type="password" id="studentCode" class="field" placeholder="Enter Your Student Code">
     </div>
-
     <button class="btn-login" onclick="studentLogin()">
       Login <span style="font-size:24px;line-height:0;">➔</span>
     </button>
     <div id="loginError" style="color:#f87171;font-size:15px;text-align:center;margin-top:15px;font-weight:600;"></div>
-
     <div class="made-by-box">
       <div class="made-by-name">Mr. Mohamed Abdulfatah</div>
       <div class="made-by-slogan">Math always with you</div>
     </div>
   </div>
 
-  <!-- لوحة تحكم الطالب -->
+  <!-- لوحة التحكم -->
   <div id="dashboardView" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:#000;padding:15px 20px;border-radius:18px;border:1px solid rgba(251,191,36,0.2);">
       <div>
@@ -196,37 +116,27 @@ body {
       </div>
       <button onclick="logout()" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:bold;transition:0.3s;">خروج</button>
     </div>
-
     <h3 style="font-size:18px;color:var(--text-main);margin:25px 0 15px;">📜 الامتحانات المتاحة:</h3>
     <div id="examsListContainer"></div>
-
     <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
     <div id="historyListContainer"></div>
   </div>
 
-  <!-- واجهة أداء الامتحان -->
+  <!-- واجهة الامتحان -->
   <div id="examView" style="display:none">
-    <div class="top-logo">
-      <h3 dir="ltr">YALYAN ACADEMY</h3>
-    </div>
+    <div class="top-logo"><h3 dir="ltr">YALYAN ACADEMY</h3></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
       <h3 id="currentExamTitle" style="margin:0;color:#fff;font-size:20px;"></h3>
       <span class="pill" id="questionCountBadge"></span>
     </div>
-    
     <div id="questionsRenderBox"></div>
-    
-    <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">
-      إنهاء الامتحان (Finish)
-    </button>
+    <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">إنهاء الامتحان (Finish)</button>
     <div id="examStatusMsg" style="text-align:center;color:#f87171;margin-top:15px;font-size:16px;font-weight:bold"></div>
   </div>
 
-  <!-- واجهة مراجعة النتيجة -->
+  <!-- واجهة المراجعة -->
   <div id="reviewView" style="display:none">
-    <div class="top-logo">
-      <h3 dir="ltr">YALYAN ACADEMY</h3>
-    </div>
+    <div class="top-logo"><h3 dir="ltr">YALYAN ACADEMY</h3></div>
     <div style="text-align:center;margin-bottom:30px">
       <h2 style="margin:0;color:#fff;font-size:26px;">نتيجة الاختبار</h2>
       <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:50px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;direction:ltr;box-shadow:0 0 25px rgba(251,191,36,0.3);border:2px solid var(--gold-main);"></div>
@@ -243,7 +153,7 @@ const cfg = window.YALYN_CONFIG || {};
 let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
-let globalStudentResults = []; 
+let globalStudentResults = [];
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
@@ -252,24 +162,18 @@ async function studentLogin() {
   const err = document.getElementById('loginError');
   err.textContent = "Checking Credentials...";
   if(!code) { err.textContent = "Please enter your code"; return; }
-
   try {
     const res = await fetch(cfg.webAppUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "getStudentData", code })
     });
     const data = await res.json();
     if(data.success && data.student) {
-      currentStudent = data.student;
-      err.textContent = "";
-      loadDashboard();
+      currentStudent = data.student; err.textContent = ""; loadDashboard();
     } else {
       err.textContent = "Invalid Student Code!";
     }
-  } catch(e) {
-    err.textContent = "Server Connection Error.";
-  }
+  } catch(e) { err.textContent = "Server Connection Error."; }
 }
 
 async function loadDashboard() {
@@ -288,26 +192,17 @@ async function loadDashboard() {
 
   try {
     const res = await fetch(cfg.webAppUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "getStudentDashboardData",
-        grade: currentStudent.grade || "",
-        studentName: currentStudent.name || ""
-      })
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade || "", studentName: currentStudent.name || "" })
     });
-    
     const data = await res.json();
     studentCompletedExamIds.clear();
     globalStudentResults = data.results || [];
     
     if(globalStudentResults.length > 0) {
-      historyBox.innerHTML = "";
       globalStudentResults.forEach((r, idx) => {
         studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
-        
         const reviewBtn = r.reviewData ? `<button class="btn-outline" onclick="openPastReview(${idx})">👁️ مراجعة</button>` : '';
-
         historyBox.innerHTML += `
           <div class="exam-item">
             <div style="display:flex;align-items:center;gap:15px;">
@@ -331,69 +226,53 @@ async function loadDashboard() {
         const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase());
         examsBox.innerHTML += `
           <div class="exam-item">
-            ${isDone 
-              ? `<span class="pill-gray">مكتمل ✓</span>` 
-              : `<button class="btn" style="width:auto;padding:8px 20px;" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`
-            }
-            <div style="text-align:left">
-              <b style="font-size:17px;color:var(--gold-light)">${ex.examTitle}</b>
-            </div>
+            ${isDone ? `<span class="pill-gray">مكتمل ✓</span>` : `<button class="btn" style="width:auto;padding:8px 20px;" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`}
+            <div style="text-align:left"><b style="font-size:17px;color:var(--gold-light)">${ex.examTitle}</b></div>
           </div>
         `;
       });
     } else {
       examsBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#f87171;font-size:14px;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
     }
-
-  } catch(e) {
-    examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>";
-  }
+  } catch(e) { examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>"; }
 }
 
 async function startExam(examId, encodedTitle) {
   const examTitle = decodeURIComponent(encodedTitle);
-  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) {
-    alert("لقد أتممت هذا الاختبار مسبقاً.");
-    return;
-  }
+  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
 
   document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'none';
   document.getElementById('examView').style.display = 'block';
   document.getElementById('currentExamTitle').textContent = examTitle;
   document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:18px;'>جاري التجهيز...</div>";
-  document.getElementById('examStatusMsg').textContent = "";
 
   try {
     const res = await fetch(cfg.webAppUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
       body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade })
     });
     const data = await res.json();
     activeExamQuestions = data.questions || [];
-    
-    if (activeExamQuestions.length === 0) {
-      throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
-    }
-
+    if (activeExamQuestions.length === 0) throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
     document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} Questions`;
+    
     const box = document.getElementById('questionsRenderBox');
     box.innerHTML = "";
 
     activeExamQuestions.forEach((q, idx) => {
-      const c1 = toStr(q.choice1);
-      const c2 = toStr(q.choice2);
-      const c3 = toStr(q.choice3);
-      const c4 = toStr(q.choice4);
+      const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
       const isMcq = c1 !== "";
-
-      // الإضافة الجديدة الخاصة برسم الصورة (إن وجدت) داخل برواز ذهبي
-      const imageHtml = q.image ? `<div style="text-align:center;"><img src="${toStr(q.image)}" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main); box-shadow:0 8px 20px rgba(0,0,0,0.6);"></div>` : "";
+      
+      // التعديل السحري لمعالجة الصور: إضافة referrerpolicy="no-referrer" وتجريد الرابط من المسافات
+      let cleanUrl = toStr(q.image).replace(/['"]/g, '');
+      const imageHtml = cleanUrl ? `<div style="text-align:center;"><img src="${cleanUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main); box-shadow:0 8px 20px rgba(0,0,0,0.6);"></div>` : "";
+      
+      // معالجة السؤال إذا كان فارغاً (يحتوي على صورة فقط)
+      const questionText = toStr(q.question) !== "" ? `<div class="q-title"><span class="q-num">${idx + 1}.</span> ${toStr(q.question)}</div>` : `<div class="q-title"><span class="q-num">${idx + 1}.</span></div>`;
 
       box.innerHTML += `
         <div class="q-card">
-          <div class="q-title"><span class="q-num">${idx + 1}.</span> ${toStr(q.question)}</div>
+          ${questionText}
           ${imageHtml}
           ${isMcq ? `
             <div>
@@ -408,44 +287,22 @@ async function startExam(examId, encodedTitle) {
         </div>
       `;
     });
-
-  } catch(e) {
-    document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:25px;border-radius:15px;'>${e.message}</div>`;
-  }
+  } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:25px;border-radius:15px;'>${e.message}</div>`; }
 }
 
 async function submitExam() {
-  let score = 0;
-  const reviewList = [];
-
+  let score = 0; const reviewList = [];
   activeExamQuestions.forEach((q, idx) => {
-    let studentAns = "";
-    const isMcq = toStr(q.choice1) !== "";
-    if(isMcq) {
-      const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
-      if(checked) studentAns = toStr(checked.value);
-    } else {
-      const inp = document.getElementById(`complete_ans_${idx}`);
-      if(inp) studentAns = toStr(inp.value);
-    }
-
+    let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
+    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } 
+    else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
     const isCorrect = studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase();
-    if(isCorrect) {
-      score++;
-    }
-
-    reviewList.push({
-      question: toStr(q.question),
-      studentAns: studentAns || "No Answer",
-      correctAns: toStr(q.correctAnswer),
-      isCorrect: isCorrect
-    });
+    if(isCorrect) score++;
+    reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
   });
 
   const finishBtn = document.getElementById('finishExamBtn');
-  finishBtn.disabled = true;
-  finishBtn.textContent = "جاري الحفظ...";
-
+  finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
   const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
   const finalScoreString = `${score} / ${totalQuestions}`;
   const examTitle = document.getElementById('currentExamTitle').textContent;
@@ -453,44 +310,18 @@ async function submitExam() {
 
   try {
     await fetch(cfg.webAppUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({
-        action: "saveStudentResult",
-        studentName: currentStudent.name,
-        grade: currentStudent.grade,
-        examTitle: examTitle,
-        score: finalScoreString, 
-        date: new Date().toLocaleDateString('ar-EG'),
-        reviewData: reviewDataStr
-      })
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr })
     });
-
     studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-
-    finishBtn.disabled = false;
-    finishBtn.textContent = "إنهاء الامتحان (Finish)";
-    
+    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
     renderReviewScreen(reviewList, finalScoreString);
-
-  } catch(e) {
-    document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى.";
-    finishBtn.disabled = false;
-  }
+  } catch(e) { document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; finishBtn.disabled = false; }
 }
 
 function openPastReview(idx) {
-  const r = globalStudentResults[idx];
-  if(!r || !r.reviewData) return;
-  
-  let parsedReview = [];
-  try {
-    parsedReview = JSON.parse(r.reviewData);
-  } catch(e) {
-    alert("عذراً، تعذر تحميل بيانات المراجعة.");
-    return;
-  }
-  
+  const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
+  let parsedReview = []; try { parsedReview = JSON.parse(r.reviewData); } catch(e) { alert("عذراً، تعذر تحميل بيانات المراجعة."); return; }
   renderReviewScreen(parsedReview, r.score);
 }
 
@@ -499,40 +330,24 @@ function renderReviewScreen(reviewList, scoreStr) {
   document.getElementById('examView').style.display = 'none';
   document.getElementById('reviewView').style.display = 'block';
   document.getElementById('finalScoreBadge').textContent = scoreStr;
-
-  const reviewBox = document.getElementById('reviewRenderBox');
-  reviewBox.innerHTML = "";
-
+  const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
   reviewList.forEach((item, i) => {
     reviewBox.innerHTML += `
       <div class="review-box ${item.isCorrect ? 'review-correct' : 'review-wrong'}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px">
           <span style="font-weight:bold;color:#fff;font-size:16px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</span>
-          <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}" style="white-space:nowrap;margin-left:10px;">
-            ${item.isCorrect ? '✓' : '✗'}
-          </span>
+          <span class="${item.isCorrect ? 'review-badge-ok' : 'review-badge-err'}" style="white-space:nowrap;margin-left:10px;">${item.isCorrect ? '✓' : '✗'}</span>
         </div>
         <div style="font-size:15px;margin-bottom:10px;background:#000;padding:10px 15px;border-radius:10px;border:1px solid #333;">
           Your Answer: <span style="font-weight:bold;color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span>
         </div>
-        ${!item.isCorrect ? `
-          <div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px 15px;border-radius:10px;border:1px solid rgba(34,197,94,0.2);">
-            Correct Answer: <b>${item.correctAns}</b>
-          </div>
-        ` : ''}
+        ${!item.isCorrect ? `<div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px 15px;border-radius:10px;border:1px solid rgba(34,197,94,0.2);">Correct Answer: <b>${item.correctAns}</b></div>` : ''}
       </div>
     `;
   });
 }
 
-function logout() {
-  currentStudent = null;
-  document.getElementById('studentCode').value = '';
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('loginView').style.display = 'block';
-}
+function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }
 </script>
 </body>
 </html>
