@@ -34,13 +34,13 @@
   }
   .brand-subtitle { font-size: 20px; font-weight: 800; color: #fff; text-align: center; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
   .input-wrapper { position: relative; margin-bottom: 25px; }
-  .field { width: 100%; background: #000; border: 2px solid var(--gold-main); border-radius: 50px; padding: 18px 20px 18px 20px; color: white; outline: 0; font-size: 16px; font-weight: 600; text-align: center; }
+  .field { width: 100%; background: #000; border: 2px solid var(--gold-main); border-radius: 50px; padding: 18px 20px; color: white; outline: 0; font-size: 16px; font-weight: 600; text-align: center; }
   .btn-login { width: 100%; padding: 16px; border-radius: 50px; border: 2px solid #fff; background: linear-gradient(to bottom, #fde047, #f59e0b); color: #000; font-weight: 900; font-size: 20px; cursor: pointer; transition: 0.3s; }
   .btn-login:hover { transform: translateY(-3px); filter: brightness(1.1); }
   .exam-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(251, 191, 36, 0.2); padding: 18px 22px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
   .pill { background: rgba(251, 191, 36, 0.15); color: var(--gold-light); padding: 6px 14px; border-radius: 99px; font-size: 15px; font-weight: 800; border: 1px solid var(--gold-main); }
   .pill-gray { background: #222; color: #777; padding: 6px 14px; border-radius: 99px; font-size: 13px; border: 1px solid #444; }
-  .btn { border: 1px solid var(--gold-main); color: #000; padding: 10px 20px; border-radius: 12px; background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer; width: auto; font-size: 15px; }
+  .btn { border: 1px solid var(--gold-main); color: #000; padding: 10px 20px; border-radius: 12px; background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer; font-size: 15px; }
   .q-card { background: linear-gradient(145deg, #1f1f1f, #0d0d0d); border: 1px solid var(--gold-main); border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left; }
   .choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
   .choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
@@ -215,15 +215,28 @@ async function startExam(examId, encodedTitle) {
       const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
       const isMcq = c1 !== "";
       
-      let cleanUrl = toStr(q.image).replace(/['"]/g, '').trim();
-      if (cleanUrl.includes('drive.google.com/file/d/')) {
-        const match = cleanUrl.match(/\/d\/([a-zA-Z0-9_-]+)/);
-        if (match && match[1]) {
-          cleanUrl = `https://drive.google.com/uc?export=view&id=${match[1]}`;
+      let rawUrl = toStr(q.image).replace(/['"]/g, '').trim();
+      let finalImgUrl = "";
+
+      if (rawUrl) {
+        let fileId = "";
+        if (rawUrl.includes('/d/')) {
+          const parts = rawUrl.split('/d/');
+          if (parts[1]) fileId = parts[1].split('/')[0];
+        } else if (rawUrl.includes('id=')) {
+          const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
+          fileId = urlParams.get('id');
+        }
+
+        if (fileId) {
+          // استخدام واجهة الصور المصغرة الرسمية لجوجل درايف (Thumbnail API) لعرض الصورة بوضوح تام ودون حظر
+          finalImgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        } else {
+          finalImgUrl = rawUrl;
         }
       }
 
-      const imageHtml = cleanUrl ? `<div style="text-align:center;"><img src="${cleanUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);"></div>` : "";
+      const imageHtml = finalImgUrl ? `<div style="text-align:center;"><img src="${finalImgUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x200?text=Image+Load+Error';"></div>` : "";
       const questionText = toStr(q.question) !== "" ? `<div style="font-size:18px;font-weight:800;margin-bottom:18px;color:#fff;"><span style="color:var(--gold-main);">${idx + 1}.</span> ${toStr(q.question)}</div>` : "";
 
       box.innerHTML += `
@@ -272,7 +285,10 @@ async function submitExam() {
     studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
     finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
     renderReviewScreen(reviewList, finalScoreString);
-  } catch(e) { document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; finishBtn.disabled = false; }
+  } catch(e) { 
+    document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; 
+    finishBtn.disabled = false; 
+  }
 }
 
 function openPastReview(idx) {
