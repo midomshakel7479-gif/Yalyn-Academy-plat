@@ -50,7 +50,7 @@ body {
   text-shadow: 0 2px 4px rgba(0,0,0,0.8);
 }
 
-/* حقل الإدخال الذهبي (نفس الصورة) */
+/* حقل الإدخال الذهبي */
 .input-wrapper {
   position: relative; margin-top: 20px; margin-bottom: 25px;
 }
@@ -216,7 +216,6 @@ body {
     
     <div id="questionsRenderBox"></div>
     
-    <!-- زر الإنهاء (محمي من مشكلة تحديث الصفحة) -->
     <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">
       إنهاء الامتحان (Finish)
     </button>
@@ -230,7 +229,6 @@ body {
     </div>
     <div style="text-align:center;margin-bottom:30px">
       <h2 style="margin:0;color:#fff;font-size:26px;">نتيجة الاختبار</h2>
-      <!-- مربع النتيجة متوهج بالذهبي -->
       <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:50px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;direction:ltr;box-shadow:0 0 25px rgba(251,191,36,0.3);border:2px solid var(--gold-main);"></div>
       <p style="color:var(--text-muted);font-size:15px;margin:0">مراجعة الإجابات:</p>
     </div>
@@ -245,7 +243,7 @@ const cfg = window.YALYN_CONFIG || {};
 let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
-let globalStudentResults = []; // لتخزين النتائج للمراجعة لاحقا
+let globalStudentResults = []; 
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
@@ -308,7 +306,6 @@ async function loadDashboard() {
       globalStudentResults.forEach((r, idx) => {
         studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
         
-        // إذا كان تقرير المراجعة متوفراً في الشيت، نعرض زر المراجعة
         const reviewBtn = r.reviewData ? `<button class="btn-outline" onclick="openPastReview(${idx})">👁️ مراجعة</button>` : '';
 
         historyBox.innerHTML += `
@@ -391,9 +388,13 @@ async function startExam(examId, encodedTitle) {
       const c4 = toStr(q.choice4);
       const isMcq = c1 !== "";
 
+      // الإضافة الجديدة الخاصة برسم الصورة (إن وجدت) داخل برواز ذهبي
+      const imageHtml = q.image ? `<div style="text-align:center;"><img src="${toStr(q.image)}" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main); box-shadow:0 8px 20px rgba(0,0,0,0.6);"></div>` : "";
+
       box.innerHTML += `
         <div class="q-card">
           <div class="q-title"><span class="q-num">${idx + 1}.</span> ${toStr(q.question)}</div>
+          ${imageHtml}
           ${isMcq ? `
             <div>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
@@ -402,7 +403,6 @@ async function startExam(examId, encodedTitle) {
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c4}"> <span>${c4}</span></label>
             </div>
           ` : `
-            <!-- حماية ضد الإرسال بالخطأ عن طريق زر Enter -->
             <input type="text" id="complete_ans_${idx}" class="complete-input" placeholder="Type answer here..." onkeydown="if(event.key === 'Enter') { event.preventDefault(); return false; }">
           `}
         </div>
@@ -446,11 +446,10 @@ async function submitExam() {
   finishBtn.disabled = true;
   finishBtn.textContent = "جاري الحفظ...";
 
-  // تجميد الدرجة 
   const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
   const finalScoreString = `${score} / ${totalQuestions}`;
   const examTitle = document.getElementById('currentExamTitle').textContent;
-  const reviewDataStr = JSON.stringify(reviewList); // تجهيز تقرير الأخطاء
+  const reviewDataStr = JSON.stringify(reviewList);
 
   try {
     await fetch(cfg.webAppUrl, {
@@ -463,7 +462,7 @@ async function submitExam() {
         examTitle: examTitle,
         score: finalScoreString, 
         date: new Date().toLocaleDateString('ar-EG'),
-        reviewData: reviewDataStr // إرسال التقرير ليتم حفظه في العمود السادس
+        reviewData: reviewDataStr
       })
     });
 
@@ -472,7 +471,6 @@ async function submitExam() {
     finishBtn.disabled = false;
     finishBtn.textContent = "إنهاء الامتحان (Finish)";
     
-    // استخدام دالة العرض الموحدة
     renderReviewScreen(reviewList, finalScoreString);
 
   } catch(e) {
@@ -481,7 +479,6 @@ async function submitExam() {
   }
 }
 
-// دالة لفتح المراجعة السابقة في أي وقت من لوحة التحكم
 function openPastReview(idx) {
   const r = globalStudentResults[idx];
   if(!r || !r.reviewData) return;
@@ -497,7 +494,6 @@ function openPastReview(idx) {
   renderReviewScreen(parsedReview, r.score);
 }
 
-// دالة موحدة لرسم شاشة المراجعة
 function renderReviewScreen(reviewList, scoreStr) {
   document.getElementById('dashboardView').style.display = 'none';
   document.getElementById('examView').style.display = 'none';
