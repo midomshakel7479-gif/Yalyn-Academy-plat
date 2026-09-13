@@ -77,7 +77,7 @@ body {
 .btn {
   border: 2px solid #fff; color: #000; padding: 12px 24px; border-radius: 50px;
   background: linear-gradient(to bottom, #fde047, #f59e0b); font-weight: 900; cursor: pointer;
-  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); transition: 0.3s; font-size: 15px;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); transition: 0.3s; font-size: 15px; text-decoration: none; display: inline-block; text-align: center;
 }
 .btn:hover { transform: translateY(-2px); filter: brightness(1.1); box-shadow: 0 12px 25px rgba(245, 158, 11, 0.6); }
 .btn.alt { background: rgba(251, 191, 36, 0.1); border-color: var(--gold-main); color: var(--gold-main); box-shadow: none; }
@@ -112,11 +112,11 @@ select.field { cursor: pointer; }
 .question-review-item { background: rgba(255,255,255,0.02); border: 1px solid var(--line); padding: 18px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 15px; }
 .question-review-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold-main); margin-top: 4px; cursor: pointer; }
 
-/* لوحة تحكم الواتساب الجماعي العائمة المتوافقة مع الموبايل */
+/* لوحة تحكم الواتساب الجماعي العائمة المتوافقة 100% مع الهواتف */
 #waQueueBox {
   position: fixed; bottom: 20px; left: 20px; z-index: 99999;
   background: #141414; border: 2px solid #25d366; border-radius: 20px;
-  padding: 20px; width: min(350px, 90vw); box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+  padding: 20px; width: min(360px, 92vw); box-shadow: 0 15px 40px rgba(0,0,0,0.9);
   display: none; animation: slideUp 0.3s ease;
 }
 @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -263,16 +263,20 @@ select.field { cursor: pointer; }
 </main>
 </div>
 
-<!-- لوحة التحكم العائمة لإرسال الواتساب من الموبايل والكمبيوتر -->
+<!-- لوحة الواتساب العائمة المتوافقة 100% مع الهواتف -->
 <div id="waQueueBox">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
     <h4 style="margin:0; color:#25d366;">💬 إرسال واتساب للغائبين</h4>
     <span id="waProgressText" style="font-size:12px; color:var(--gold-main);">0 / 0</span>
   </div>
-  <p id="waStudentNameDisplay" style="font-size:14px; margin:0 0 15px; font-weight:bold;"></p>
-  <div style="display:flex; gap:10px;">
-    <button class="btn" style="flex:1; background:#25d366; color:#fff; font-size:13px; padding:10px; border:0; border-radius:10px;" onclick="sendCurrentAndNextWhatsApp()">إرسال وفتح التالي ➡️</button>
-    <button class="btn alt" style="padding:10px 14px; font-size:13px; border-color:#ef4444; color:#ef4444;" onclick="cancelWhatsAppQueue()">إيقاف</button>
+  <p id="waStudentNameDisplay" style="font-size:15px; margin:0 0 12px; font-weight:bold;"></p>
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    <!-- رابط حقيقي مباشر <a> لكي لا يمنعه أي متصفح هاتف محمول (أندرويد/آيفون) -->
+    <a id="waActionBtn" href="#" target="_blank" class="btn" style="background:#25d366; color:#fff; text-decoration:none; padding:12px; border-radius:12px; font-size:14px; text-align:center;">1️⃣ اضغط لفتح واتساب الطالب</a>
+    <div style="display:flex; gap:10px;">
+      <button class="btn" style="flex:1; background:var(--gold-main); color:#000; font-size:13px; padding:10px; border:0; border-radius:10px; cursor:pointer;" onclick="nextWhatsAppStudent()">الطالب التالي ➡️</button>
+      <button class="btn alt" style="padding:10px 14px; font-size:13px; border-color:#ef4444; color:#ef4444; cursor:pointer;" onclick="cancelWhatsAppQueue()">إيقاف</button>
+    </div>
   </div>
 </div>
 
@@ -636,7 +640,7 @@ function filterDashboardData() {
   }
 }
 
-// نظام الواتساب الجماعي العائم المتوافق كلياً مع الهواتف المحمولة
+// نظام الواتساب الجماعي العائم الآمن 100% للهواتف والكمبيوتر
 function startBulkWhatsAppQueue() {
   const selectedExam = document.getElementById('filterExamTitle').value.trim();
   if(!selectedExam) {
@@ -662,28 +666,31 @@ function updateWaQueueDisplay() {
   const s = currentNotSubmittedQueue[queueIndex];
   document.getElementById('waProgressText').textContent = `طالب (${queueIndex + 1} من ${currentNotSubmittedQueue.length})`;
   document.getElementById('waStudentNameDisplay').textContent = s.name;
+  
+  let cleanPhone = s.phone ? s.phone.toString().replace(/\D/g,'') : '';
+  const selectedExam = document.getElementById('filterExamTitle').value.trim();
+  const waActionBtn = document.getElementById('waActionBtn');
+
+  if(!cleanPhone) {
+    waActionBtn.href = "#";
+    waActionBtn.textContent = "⚠️ الطالب ليس لديه رقم مسجل (اضغط التالي)";
+    waActionBtn.style.background = "#6b7280";
+  } else {
+    if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
+    const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان (${selectedExam}) حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
+    waActionBtn.href = `https://wa.me/${cleanPhone}?text=${waMsg}`;
+    waActionBtn.textContent = `1️⃣ إرسال واتساب إلى (${s.name})`;
+    waActionBtn.style.background = "#25d366";
+  }
 }
 
-function sendCurrentAndNextWhatsApp() {
-  if(queueIndex >= currentNotSubmittedQueue.length) return;
-  const s = currentNotSubmittedQueue[queueIndex];
-  let cleanPhone = s.phone ? s.phone.toString().replace(/\D/g,'') : '';
-  
-  if(cleanPhone) {
-    if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
-    const selectedExam = document.getElementById('filterExamTitle').value.trim();
-    const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان (${selectedExam}) حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
-    window.open(`https://wa.me/${cleanPhone}?text=${waMsg}`, '_blank');
-  } else {
-    toast(`الطالب ${s.name} ليس لديه رقم هاتف مسجل.`);
-  }
-
+function nextWhatsAppStudent() {
   queueIndex++;
   updateWaQueueDisplay();
 }
 
 function cancelWhatsAppQueue() {
-  document.getElementById('waQueueBox').style.display = 'none';
+  document.getElementById('waQueueBox'].style.display = 'none';
   toast('تم إيقاف الإرسال الجماعي.');
 }
 </script>
