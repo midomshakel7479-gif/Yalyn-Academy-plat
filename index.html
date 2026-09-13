@@ -27,13 +27,20 @@ body {
   min-height: 100vh; overflow-x: hidden;
 }
 
-.shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
-@media(max-width: 900px) { .shell { display: block; } }
-
+/* تخطيط مرن وثابت وآمن 100% (Flexbox) */
+.shell { display: flex; min-height: 100vh; direction: rtl; }
 .sidebar {
-  position: sticky; top: 0; height: 100vh; padding: 20px 15px;
-  background: #000000; border-left: 1px solid var(--line); z-index: 10;
+  width: 260px; min-width: 260px; height: 100vh; position: sticky; top: 0;
+  background: #000000; border-left: 1px solid var(--line); padding: 20px 15px;
+  overflow-y: auto; z-index: 10;
 }
+.main { flex: 1; padding: 30px; max-width: 1400px; margin: 0 auto; overflow-y: auto; }
+
+@media(max-width: 900px) {
+  .shell { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; }
+}
+
 .brand { display: flex; align-items: center; gap: 12px; padding: 10px 10px 25px; border-bottom: 1px solid var(--line); margin-bottom: 15px; }
 .logo {
   width: 45px; height: 45px; border-radius: 14px;
@@ -55,8 +62,6 @@ body {
 }
 .nav .icon { width: 22px; text-align: center; font-size: 16px; }
 .section-label { color: var(--gold-main); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; padding: 15px 10px 8px; font-weight: 800; }
-
-.main { padding: 30px; max-width: 1500px; width: 100%; margin: auto; min-width: 0; }
 
 .card {
   border: 1px solid var(--line); border-radius: 24px;
