@@ -529,17 +529,21 @@ function onGradeSelected() {
   }
 
   const examsSet = new Set();
+  
+  // فلترة الامتحانات بحيث تطابق الصف المختار حصراً
+  if(window.globalExamsList) {
+    window.globalExamsList.forEach(ex => {
+      if(ex.grade && ex.grade.toString().trim().toLowerCase() === selectedGrade.toLowerCase()) {
+        examsSet.add(ex.examTitle.toString().trim());
+      }
+    });
+  }
+
   globalResults.forEach(r => {
-    if(r.grade && r.grade.toString().trim() === selectedGrade && r.examTitle) {
+    if(r.grade && r.grade.toString().trim().toLowerCase() === selectedGrade.toLowerCase() && r.examTitle) {
       examsSet.add(r.examTitle.toString().trim());
     }
   });
-
-  if(window.globalExamsList) {
-    window.globalExamsList.forEach(ex => {
-      examsSet.add(ex.examTitle.toString().trim());
-    });
-  }
 
   examsSet.forEach(ex => {
     examSelect.innerHTML += `<option value="${ex}">${ex}</option>`;
