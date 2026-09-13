@@ -145,7 +145,7 @@ body {
 <!-- إدارة الطلاب -->
 <section id="studentsPanel" class="view">
   <div class="hero">
-    <h1>إدارة وتجسيل <span>الطلاب</span></h1>
+    <h1>إدارة وتسجيل <span>الطلاب</span></h1>
     <p>أضف الطلاب الجدد إلى Google Sheets ليحصلوا على أكوادهم السرية الخاصة بهم تلقائياً.</p>
     <div class="actions">
       <button class="btn" onclick="openStudentModal()">＋ إضافة طالب جديد</button>
@@ -395,6 +395,234 @@ OUTPUT FORMAT: Respond ONLY with a valid clean JSON array:
 Curriculum Content:
 ${fullExtractedText}`;
 
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent`, {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-goog-
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': cfg.geminiApiKey },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+
+    const aiData = await res.json();
+    if (!aiData.candidates || !aiData.candidates[0] || !aiData.candidates[0].content) {
+      throw new Error("فشل توليد الأسئلة من الذكاء الاصطناعي.");
+    }
+
+    const rawText = aiData.candidates[0].content.parts[0].text;
+    const cleanJson = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+    perfectExtractedQuestions = JSON.parse(cleanJson);
+
+    const container = document.getElementById('questionsPreviewContainer');
+    container.innerHTML = "";
+    
+    perfectExtractedQuestions.forEach((q, idx) => {
+      const isMcq = q.choice1 && q.choice1.trim() !== "";
+      container.innerHTML += `
+        <div class="question-review-item">
+          <input type="checkbox" id="q_check_${idx}" checked>
+          <div style="width: 100%;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <strong>السؤال (${idx + 1}):</strong>
+              <span class="pill">${isMcq ? "اختياري" : "أكمل"}</span>
+            </div>
+            <div style="font-size: 14px; color: #fff; margin-top: 6px; line-height: 1.5;">${q.question}</div>
+            ${isMcq ? `<div style="font-size:12px; color:var(--text-muted); margin-top:4px;">الخيارات: [${q.choice1}, ${q.choice2}, ${q.choice3}, ${q.choice4}]</div>` : ''}
+            <div style="font-size: 12px; color: var(--gold-light); margin-top: 6px;">الإجابة: <b>${q.correctAnswer}</b></div>
+          </div>
+        </div>
+      `;
+    });
+
+    previewBox.style.display = 'block';
+    errorBox.textContent = `تم توليد 15 سؤالاً بنجاح من الصفحات (${fromPage} إلى ${toPage})!`;
+    toast('تم استخراج الأسئلة بنجاح.');
+
+  } catch (err) {
+     errorBox.textContent = "خطأ: " + err.message;
+  } finally {
+     btn.textContent = 'توليد 15 سؤالاً بالذكاء الاصطناعي'; 
+     btn.disabled = false;
+  }
+}
+
+async function saveExtractedToSheet() {
+  const examId = document.getElementById('exId').value.trim() || "1";
+  const examTitle = document.getElementById('exTitle').value.trim() || "امتحان";
+  const examGrade = document.getElementById('exGrade').value.trim() || "Grade 4";
+  
+  let selectedItems = [];
+  perfectExtractedQuestions.forEach((q, idx) => {
+    if (document.getElementById(`q_check_${idx}`).checked) selectedItems.push(q);
+  });
+
+  if (selectedItems.length === 0) { toast('الرجاء تحديد سؤال واحد على الأقل.'); return; }
+
+  const saveBtn = document.getElementById('saveSelectedBtn');
+  saveBtn.textContent = 'جاري الحفظ في الشيت...';
+  saveBtn.disabled = true;
+
+  try {
+    const payload = {
+      action: "addQuestions",
+      questions: selectedItems.map(q => ({
+         examId, grade: examGrade, examTitle,
+         question: q.question, choice1: q.choice1 || "", choice2: q.choice2 || "", choice3: q.choice3 || "", choice4: q.choice4 || "",
+         correctAnswer: q.correctAnswer, startTime: "10:00", endTime: "11:00"
+      }))
+    };
+
+    const res = await fetch(cfg.webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
+    const result = await res.json();
+    
+    if(result.success) {
+       toast('تم حفظ الأسئلة في شيت جوجل بنجاح!');
+       document.getElementById('previewBox').style.display = 'none';
+    } else { throw new Error(result.message || "فشل الحفظ."); }
+  } catch (e) {
+    toast('حدث خطأ أثناء الحفظ في الشيت.');
+  } finally {
+    saveBtn.textContent = 'اعتماد وحفظ الأسئلة في الشيت';
+    saveBtn.disabled = false;
+  }
+}
+
+let globalStudents = [];
+let globalResults = [];
+
+async function loadTeacherDashboard() {
+  try {
+    const res = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "getTeacherDashboardData" })
+    });
+    const data = await res.json();
+    if(data.success) {
+      globalStudents = data.students || [];
+      globalResults = data.results || [];
+      filterDashboardData();
+    }
+  } catch (e) { console.error(e); }
+}
+
+function filterDashboardData() {
+  const selectedGrade = document.getElementById('filterGrade').value.trim();
+  const examTitleQuery = document.getElementById('filterExamTitle').value.trim().toLowerCase();
+
+  const submittedTable = document.getElementById('submittedStudentsTable');
+  const notSubmittedTable = document.getElementById('notSubmittedStudentsTable');
+
+  if(!selectedGrade) {
+    submittedTable.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;">الرجاء اختيار الصف الدراسي أولاً</td></tr>`;
+    notSubmittedTable.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;">الرجاء اختيار الصف الدراسي أولاً</td></tr>`;
+    document.getElementById('submittedCount').textContent = "0";
+    document.getElementById('notSubmittedCount').textContent = "0";
+    return;
+  }
+
+  const gradeStudents = globalStudents.filter(s => s.grade && s.grade.toString().trim() === selectedGrade);
+  const filteredResults = globalResults.filter(r => {
+    const matchGrade = r.grade && r.grade.toString().trim() === selectedGrade;
+    const matchExam = !examTitleQuery || (r.examTitle && r.examTitle.toLowerCase().includes(examTitleQuery));
+    return matchGrade && matchExam;
+  });
+
+  submittedTable.innerHTML = "";
+  if(filteredResults.length === 0) {
+    submittedTable.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;">لا توجد نتائج مسجلة لهذا الامتحان بالصف المحدد</td></tr>`;
+    document.getElementById('submittedCount').textContent = "0";
+  } else {
+    document.getElementById('submittedCount').textContent = filteredResults.length;
+    filteredResults.forEach(r => {
+      submittedTable.innerHTML += `
+        <tr>
+          <td><b>${r.name}</b></td>
+          <td>${r.examTitle}</td>
+          <td><span class="pill">${r.score}</span></td>
+          <td style="font-size:12px; color:var(--text-muted);">${r.date}</td>
+        </tr>
+      `;
+    });
+  }
+
+  const submittedStudentNames = new Set(filteredResults.map(r => r.name.toString().trim()));
+  const notSubmittedStudents = gradeStudents.filter(s => !submittedStudentNames.has(s.name.toString().trim()));
+
+  notSubmittedTable.innerHTML = "";
+  if(notSubmittedStudents.length === 0) {
+    notSubmittedTable.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;">ممتاز! جميع طلاب هذا الصف أتموا الاختبار</td></tr>`;
+    document.getElementById('notSubmittedCount').textContent = "0";
+  } else {
+    document.getElementById('notSubmittedCount').textContent = notSubmittedStudents.length;
+    notSubmittedStudents.forEach(s => {
+      let cleanPhone = s.phone ? s.phone.toString().replace(/\D/g,'') : '';
+      if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone; // تنسيق رقم مصر الدولي واتساب
+      const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان Yalyn Academy حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
+      const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${waMsg}` : '#';
+
+      notSubmittedTable.innerHTML += `
+        <tr>
+          <td><b>${s.name}</b></td>
+          <td style="color:var(--gold-main); font-family:monospace; font-weight:bold;">${s.code}</td>
+          <td>
+            ${s.phone ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">💬 ${s.phone}</a>` : '<span class="muted">لا يوجد رقم</span>'}
+          </td>
+        </tr>
+      `;
+    });
+  }
+}
+
+// إدارة الفيديوهات التعليمية
+function saveVideoLink() {
+  const title = document.getElementById('vidTitle').value.trim();
+  const grade = document.getElementById('vidGrade').value.trim();
+  let url = document.getElementById('vidUrl').value.trim();
+
+  if(!title || !grade || !url) { toast('الرجاء إدخال كافة بيانات الفيديو'); return; }
+
+  if(url.includes('watch?v=')) {
+    url = url.replace('watch?v=', 'embed/');
+  } else if(url.includes('youtu.be/')) {
+    url = url.replace('youtu.be/', 'www.youtube.com/embed/');
+  }
+
+  let videos = JSON.parse(localStorage.getItem('yalyn_videos') || '[]');
+  videos.push({ title, grade, url });
+  localStorage.setItem('yalyn_videos', JSON.stringify(videos));
+
+  toast('تم حفظ الفيديو بنجاح!');
+  document.getElementById('vidTitle').value = '';
+  document.getElementById('vidGrade').value = '';
+  document.getElementById('vidUrl').value = '';
+  renderVideosList();
+}
+
+function renderVideosList() {
+  const container = document.getElementById('videosListContainer');
+  let videos = JSON.parse(localStorage.getItem('yalyn_videos') || '[]');
+  if(videos.length === 0) {
+    container.innerHTML = `<p class="muted" style="text-align:center;">لا توجد فيديوهات مضافة حالياً.</p>`;
+    return;
+  }
+  container.innerHTML = "";
+  videos.forEach((v, idx) => {
+    container.innerHTML += `
+      <div style="background:rgba(0,0,0,0.5); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h4 style="margin:0 0 5px; color:var(--gold-light);">${v.title}</h4>
+          <span class="pill">${v.grade}</span>
+        </div>
+        <button class="btn alt" style="padding:6px 14px; font-size:12px; border-color:#ef4444; color:#ef4444;" onclick="deleteVideo(${idx})">حذف</button>
+      </div>
+    `;
+  });
+}
+
+function deleteVideo(idx) {
+  let videos = JSON.parse(localStorage.getItem('yalyn_videos') || '[]');
+  videos.splice(idx, 1);
+  localStorage.setItem('yalyn_videos', JSON.stringify(videos));
+  renderVideosList();
+  toast('تم حذف الفيديو.');
+}
+</script>
+</body>
+</html>
