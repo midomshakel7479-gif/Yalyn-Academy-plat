@@ -28,6 +28,8 @@ body {
 }
 
 .shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+@media(max-width: 900px) { .shell { display: block; } }
+
 .sidebar {
   position: sticky; top: 0; height: 100vh; padding: 20px 15px;
   background: #000000; border-left: 1px solid var(--line); z-index: 10;
@@ -81,7 +83,7 @@ body {
 .btn.alt { background: rgba(251, 191, 36, 0.1); border-color: var(--gold-main); color: var(--gold-main); box-shadow: none; }
 .btn.alt:hover { background: rgba(251, 191, 36, 0.2); }
 
-.panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
 .panel-head h3 { margin: 0; font-size: 18px; color: var(--gold-light); }
 .muted { color: var(--text-muted); font-size: 13px; }
 
@@ -109,6 +111,15 @@ select.field { cursor: pointer; }
 .student-modal-card { width: min(450px, 100%); padding: 30px; border-radius: 25px; background: #141414; border: 1px solid var(--gold-main); box-shadow: 0 25px 60px rgba(0,0,0,0.9); }
 .question-review-item { background: rgba(255,255,255,0.02); border: 1px solid var(--line); padding: 18px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 15px; }
 .question-review-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold-main); margin-top: 4px; cursor: pointer; }
+
+/* لوحة تحكم الواتساب الجماعي العائمة المتوافقة مع الموبايل */
+#waQueueBox {
+  position: fixed; bottom: 20px; left: 20px; z-index: 99999;
+  background: #141414; border: 2px solid #25d366; border-radius: 20px;
+  padding: 20px; width: min(350px, 90vw); box-shadow: 0 15px 40px rgba(0,0,0,0.9);
+  display: none; animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 </style>
 </head>
 <body>
@@ -160,7 +171,7 @@ select.field { cursor: pointer; }
   
   <div class="card">
     <div class="panel-head"><h3>1. إعدادات الامتحان والنطاق</h3></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:15px;margin-bottom:15px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:15px">
       <label class="muted">مسلسل الامتحان (Exam ID)<input id="exId" class="field" placeholder="1"></label>
       <label class="muted">عنوان الامتحان<input id="exTitle" class="field" placeholder="مثال: Numbers and Operations"></label>
       <label class="muted">الصف الدراسي<input id="exGrade" class="field" placeholder="Grade 4"></label>
@@ -199,13 +210,13 @@ select.field { cursor: pointer; }
 
   <div class="card">
     <div class="panel-head"><h3>تخصيص الفلترة حسب الصف والامتحان</h3></div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-      <label class="muted">اختر الصف الدراسي (يتم جلبه تلقائياً من الشيت):
+    <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 20px;">
+      <label class="muted">اختر الصف الدراسي:
         <select id="filterGrade" class="field" onchange="onGradeSelected()">
           <option value="">-- اختر الصف الدراسي --</option>
         </select>
       </label>
-      <label class="muted">اختر عنوان الامتحان (قائمة منسدلة ديناميكية):
+      <label class="muted">اختر عنوان الامتحان:
         <select id="filterExamTitle" class="field" onchange="filterDashboardData()">
           <option value="">-- اختر الصف أولاً --</option>
         </select>
@@ -213,7 +224,7 @@ select.field { cursor: pointer; }
     </div>
   </div>
 
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+  <div style="display: grid; grid-template-columns: repeat(auto-fit,minmax(350px,1fr)); gap: 20px;">
     <div class="card">
       <div class="panel-head"><h3>🟢 الطلاب الذين أتموا الامتحان</h3><span class="pill" id="submittedCount">0</span></div>
       <div style="max-height: 400px; overflow-y: auto;">
@@ -225,7 +236,13 @@ select.field { cursor: pointer; }
     </div>
 
     <div class="card">
-      <div class="panel-head"><h3>🔴 الطلاب الذين لم يؤدوا الامتحان</h3><span class="pill-danger" id="notSubmittedCount">0</span></div>
+      <div class="panel-head">
+        <div>
+          <h3>🔴 الطلاب الذين لم يؤدوا الامتحان</h3>
+          <span class="pill-danger" id="notSubmittedCount">0</span>
+        </div>
+        <button class="btn" style="background:#25d366; color:#fff; font-size:12px; padding:6px 14px; border-radius:8px; border:0; cursor:pointer;" onclick="startBulkWhatsAppQueue()">💬 إرسال جماعي للغائبين</button>
+      </div>
       <div style="max-height: 400px; overflow-y: auto;">
         <table class="table">
           <thead><tr><th>اسم الطالب</th><th>الرقم السري</th><th>رقم ولي الأمر (واتساب)</th></tr></thead>
@@ -241,26 +258,22 @@ select.field { cursor: pointer; }
     <h1>إدارة وعرض <span>الفيديوهات التعليمية</span></h1>
     <p>قم بربط وإضافة الفيديوهات التعليمية (يوتيوب أو روابط مباشرة) لتظهر مباشرة لطلابك داخل المنصة.</p>
   </div>
-
-  <div class="card">
-    <div class="panel-head"><h3>إضافة فيديو تعليمي جديد</h3></div>
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
-      <label class="muted">عنوان الفيديو<input id="vidTitle" class="field" placeholder="مثال: شرح درس الكسور الاعتيادية"></label>
-      <label class="muted">الصف الدراسي المستهدف<input id="vidGrade" class="field" placeholder="Grade 4"></label>
-    </div>
-    <label class="muted" style="margin-bottom:15px; display:block;">رابط الفيديو (رابط يوتيوب أو رابط مباشر Embed):<input id="vidUrl" class="field" placeholder="https://www.youtube.com/embed/..."></label>
-    <button class="btn" onclick="saveVideoLink()">حفظ ونشر الفيديو للطلاب</button>
-  </div>
-
-  <div class="card">
-    <div class="panel-head"><h3>الفيديوهات المضافة حالياً</h3></div>
-    <div id="videosListContainer">
-      <p class="muted" style="text-align:center;">لا توجد فيديوهات مضافة حالياً.</p>
-    </div>
-  </div>
 </section>
 
 </main>
+</div>
+
+<!-- لوحة التحكم العائمة لإرسال الواتساب من الموبايل والكمبيوتر -->
+<div id="waQueueBox">
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+    <h4 style="margin:0; color:#25d366;">💬 إرسال واتساب للغائبين</h4>
+    <span id="waProgressText" style="font-size:12px; color:var(--gold-main);">0 / 0</span>
+  </div>
+  <p id="waStudentNameDisplay" style="font-size:14px; margin:0 0 15px; font-weight:bold;"></p>
+  <div style="display:flex; gap:10px;">
+    <button class="btn" style="flex:1; background:#25d366; color:#fff; font-size:13px; padding:10px; border:0; border-radius:10px;" onclick="sendCurrentAndNextWhatsApp()">إرسال وفتح التالي ➡️</button>
+    <button class="btn alt" style="padding:10px 14px; font-size:13px; border-color:#ef4444; color:#ef4444;" onclick="cancelWhatsAppQueue()">إيقاف</button>
+  </div>
 </div>
 
 <div id="studentModal" class="student-modal">
@@ -294,7 +307,7 @@ function go(id, btn){
   if(id === 'students') document.getElementById('studentsPanel').classList.add('active');
   if(id === 'exams') document.getElementById('examsPanel').classList.add('active');
   if(id === 'results') { document.getElementById('resultsPanel').classList.add('active'); loadTeacherDashboard(); }
-  if(id === 'videos') { document.getElementById('videosPanel').classList.add('active'); renderVideosList(); }
+  if(id === 'videos') { document.getElementById('videosPanel').classList.add('active'); }
 }
 
 function openStudentModal(){ document.getElementById('studentModal').style.display='flex'; }
@@ -476,6 +489,8 @@ async function saveExtractedToSheet() {
 
 let globalStudents = [];
 let globalResults = [];
+let currentNotSubmittedQueue = [];
+let queueIndex = 0;
 
 async function loadTeacherDashboard() {
   try {
@@ -529,8 +544,6 @@ function onGradeSelected() {
   }
 
   const examsSet = new Set();
-  
-  // فلترة الامتحانات بحيث تطابق الصف المختار حصراً
   if(window.globalExamsList) {
     window.globalExamsList.forEach(ex => {
       if(ex.grade && ex.grade.toString().trim().toLowerCase() === selectedGrade.toLowerCase()) {
@@ -564,6 +577,7 @@ function filterDashboardData() {
     notSubmittedTable.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;">الرجاء اختيار الصف الدراسي وعنوان الامتحان من القائمة بالأعلى</td></tr>`;
     document.getElementById('submittedCount').textContent = "0";
     document.getElementById('notSubmittedCount').textContent = "0";
+    currentNotSubmittedQueue = [];
     return;
   }
 
@@ -595,6 +609,8 @@ function filterDashboardData() {
   const submittedStudentNames = new Set(filteredResults.map(r => r.name.toString().trim().toLowerCase()));
   const notSubmittedStudents = gradeStudents.filter(s => !submittedStudentNames.has(s.name.toString().trim().toLowerCase()));
 
+  currentNotSubmittedQueue = notSubmittedStudents;
+
   notSubmittedTable.innerHTML = "";
   if(notSubmittedStudents.length === 0) {
     notSubmittedTable.innerHTML = `<tr><td colspan="3" class="muted" style="text-align:center;">ممتاز! جميع طلاب هذا الصف أتموا هذا الامتحان</td></tr>`;
@@ -620,57 +636,55 @@ function filterDashboardData() {
   }
 }
 
-function saveVideoLink() {
-  const title = document.getElementById('vidTitle').value.trim();
-  const grade = document.getElementById('vidGrade').value.trim();
-  let url = document.getElementById('vidUrl').value.trim();
-
-  if(!title || !grade || !url) { toast('الرجاء إدخال كافة بيانات الفيديو'); return; }
-
-  if(url.includes('watch?v=')) {
-    url = url.replace('watch?v=', 'embed/');
-  } else if(url.includes('youtu.be/')) {
-    url = url.replace('youtu.be/', 'www.youtube.com/embed/');
-  }
-
-  let videos = JSON.parse(localStorage.getItem('yalyn_videos') || '[]');
-  videos.push({ title, grade, url });
-  localStorage.setItem('yalyn_videos', JSON.stringify(videos));
-
-  toast('تم حفظ الفيديو بنجاح!');
-  document.getElementById('vidTitle').value = '';
-  document.getElementById('vidGrade').value = '';
-  document.getElementById('vidUrl').value = '';
-  renderVideosList();
-}
-
-function renderVideosList() {
-  const container = document.getElementById('videosListContainer');
-  let videos = JSON.parse(localStorage.getItem('yalyn_videos') || '[]');
-  if(videos.length === 0) {
-    container.innerHTML = `<p class="muted" style="text-align:center;">لا توجد فيديوهات مضافة حالياً.</p>`;
+// نظام الواتساب الجماعي العائم المتوافق كلياً مع الهواتف المحمولة
+function startBulkWhatsAppQueue() {
+  const selectedExam = document.getElementById('filterExamTitle').value.trim();
+  if(!selectedExam) {
+    toast('الرجاء اختيار الصف والامتحان أولاً.');
     return;
   }
-  container.innerHTML = "";
-  videos.forEach((v, idx) => {
-    container.innerHTML += `
-      <div style="background:rgba(0,0,0,0.5); border:1px solid var(--line); border-radius:14px; padding:15px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <h4 style="margin:0 0 5px; color:var(--gold-light);">${v.title}</h4>
-          <span class="pill">${v.grade}</span>
-        </div>
-        <button class="btn alt" style="padding:6px 14px; font-size:12px; border-color:#ef4444; color:#ef4444;" onclick="deleteVideo(${idx})">حذف</button>
-      </div>
-    `;
-  });
+  if(!currentNotSubmittedQueue || currentNotSubmittedQueue.length === 0) {
+    toast('لا توجد طلاب متغيبون لإرسال الرسائل لهم.');
+    return;
+  }
+  
+  queueIndex = 0;
+  document.getElementById('waQueueBox').style.display = 'block';
+  updateWaQueueDisplay();
 }
 
-function deleteVideo(idx) {
-  let videos = JSON.parse(localStorage.getItem('yalyn_videos') || '[]');
-  videos.splice(idx, 1);
-  localStorage.setItem('yalyn_videos', JSON.stringify(videos));
-  renderVideosList();
-  toast('تم حذف الفيديو.');
+function updateWaQueueDisplay() {
+  if(queueIndex >= currentNotSubmittedQueue.length) {
+    document.getElementById('waQueueBox').style.display = 'none';
+    toast('تم الانتهاء من تذكير جميع الطلاب الغائبين بنجاح! 🎉');
+    return;
+  }
+  const s = currentNotSubmittedQueue[queueIndex];
+  document.getElementById('waProgressText').textContent = `طالب (${queueIndex + 1} من ${currentNotSubmittedQueue.length})`;
+  document.getElementById('waStudentNameDisplay').textContent = s.name;
+}
+
+function sendCurrentAndNextWhatsApp() {
+  if(queueIndex >= currentNotSubmittedQueue.length) return;
+  const s = currentNotSubmittedQueue[queueIndex];
+  let cleanPhone = s.phone ? s.phone.toString().replace(/\D/g,'') : '';
+  
+  if(cleanPhone) {
+    if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
+    const selectedExam = document.getElementById('filterExamTitle').value.trim();
+    const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان (${selectedExam}) حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
+    window.open(`https://wa.me/${cleanPhone}?text=${waMsg}`, '_blank');
+  } else {
+    toast(`الطالب ${s.name} ليس لديه رقم هاتف مسجل.`);
+  }
+
+  queueIndex++;
+  updateWaQueueDisplay();
+}
+
+function cancelWhatsAppQueue() {
+  document.getElementById('waQueueBox').style.display = 'none';
+  toast('تم إيقاف الإرسال الجماعي.');
 }
 </script>
 </body>
