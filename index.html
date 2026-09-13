@@ -570,6 +570,24 @@ function onGradeSelected() {
   filterDashboardData();
 }
 
+// الدالة الذكية لتنظيف الهواتف المصرية والدولية
+function formatPhoneNumber(rawPhone) {
+  if(!rawPhone) return '';
+  let phone = rawPhone.toString().replace(/\D/g, ''); // إزالة أي مسافات أو رموز
+  if(phone.length < 8) return ''; // رقم غير صالح
+
+  // إذا كان الرقم يبدأ بـ 01 (مثل 0101234)
+  if(phone.startsWith('01') && phone.length === 11) {
+    return '2' + phone; 
+  }
+  // إذا كان الرقم مسجل بدون الصفر (مثل 101234 أو 1554) ويبدأ بـ 1
+  if(phone.startsWith('1') && phone.length === 10) {
+    return '20' + phone;
+  }
+  // إذا كان الرقم دولي أو يبدأ بـ 20 أصلاً
+  return phone;
+}
+
 function filterDashboardData() {
   const selectedGrade = document.getElementById('filterGrade').value.trim();
   const selectedExam = document.getElementById('filterExamTitle').value.trim();
@@ -623,17 +641,16 @@ function filterDashboardData() {
   } else {
     document.getElementById('notSubmittedCount').textContent = notSubmittedStudents.length;
     notSubmittedStudents.forEach(s => {
-      let cleanPhone = s.phone ? s.phone.toString().replace(/\D/g,'') : '';
-      if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone; 
+      let formattedPhone = formatPhoneNumber(s.phone);
       const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان (${selectedExam}) حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
-      const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${waMsg}` : '#';
+      const waLink = formattedPhone ? `https://wa.me/${formattedPhone}?text=${waMsg}` : '#';
 
       notSubmittedTable.innerHTML += `
         <tr>
           <td><b>${s.name}</b></td>
           <td style="color:var(--gold-main); font-family:monospace; font-weight:bold;">${s.code}</td>
           <td>
-            ${s.phone ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">💬 ${s.phone}</a>` : '<span class="muted">لا يوجد رقم</span>'}
+            ${formattedPhone ? `<a href="${waLink}" target="_blank" class="btn-whatsapp">💬 ${formattedPhone}</a>` : '<span class="muted">لا يوجد رقم</span>'}
           </td>
         </tr>
       `;
@@ -667,18 +684,17 @@ function updateWaQueueDisplay() {
   document.getElementById('waProgressText').textContent = `طالب (${queueIndex + 1} من ${currentNotSubmittedQueue.length})`;
   document.getElementById('waStudentNameDisplay').textContent = s.name;
   
-  let cleanPhone = s.phone ? s.phone.toString().replace(/\D/g,'') : '';
+  let formattedPhone = formatPhoneNumber(s.phone);
   const selectedExam = document.getElementById('filterExamTitle').value.trim();
   const waActionBtn = document.getElementById('waActionBtn');
 
-  if(!cleanPhone) {
+  if(!formattedPhone) {
     waActionBtn.href = "#";
     waActionBtn.textContent = "⚠️ الطالب ليس لديه رقم مسجل (اضغط التالي)";
     waActionBtn.style.background = "#6b7280";
   } else {
-    if(cleanPhone.startsWith('0')) cleanPhone = '2' + cleanPhone;
     const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان (${selectedExam}) حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
-    waActionBtn.href = `https://wa.me/${cleanPhone}?text=${waMsg}`;
+    waActionBtn.href = `https://wa.me/${formattedPhone}?text=${waMsg}`;
     waActionBtn.textContent = `1️⃣ إرسال واتساب إلى (${s.name})`;
     waActionBtn.style.background = "#25d366";
   }
