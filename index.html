@@ -27,7 +27,7 @@ body {
   min-height: 100vh; overflow-x: hidden;
 }
 
-.shell { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
+.shell { display: grid; grid-template-columns: 260px minmax(0, 1fr); min-height: 100vh; }
 @media(max-width: 900px) { .shell { display: block; } }
 
 .sidebar {
@@ -56,7 +56,7 @@ body {
 .nav .icon { width: 22px; text-align: center; font-size: 16px; }
 .section-label { color: var(--gold-main); font-size: 11px; text-transform: uppercase; letter-spacing: 2px; padding: 15px 10px 8px; font-weight: 800; }
 
-.main { padding: 30px; max-width: 1500px; width: 100%; margin: auto; }
+.main { padding: 30px; max-width: 1500px; width: 100%; margin: auto; min-width: 0; }
 
 .card {
   border: 1px solid var(--line); border-radius: 24px;
@@ -112,7 +112,6 @@ select.field { cursor: pointer; }
 .question-review-item { background: rgba(255,255,255,0.02); border: 1px solid var(--line); padding: 18px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 15px; }
 .question-review-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold-main); margin-top: 4px; cursor: pointer; }
 
-/* لوحة تحكم الواتساب الجماعي العائمة المتوافقة 100% مع الهواتف */
 #waQueueBox {
   position: fixed; bottom: 20px; left: 20px; z-index: 99999;
   background: #141414; border: 2px solid #25d366; border-radius: 20px;
@@ -263,7 +262,6 @@ select.field { cursor: pointer; }
 </main>
 </div>
 
-<!-- لوحة الواتساب العائمة المتوافقة 100% مع الهواتف -->
 <div id="waQueueBox">
   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
     <h4 style="margin:0; color:#25d366;">💬 إرسال واتساب للغائبين</h4>
@@ -271,7 +269,6 @@ select.field { cursor: pointer; }
   </div>
   <p id="waStudentNameDisplay" style="font-size:15px; margin:0 0 12px; font-weight:bold;"></p>
   <div style="display:flex; flex-direction:column; gap:10px;">
-    <!-- رابط حقيقي مباشر <a> لكي لا يمنعه أي متصفح هاتف محمول (أندرويد/آيفون) -->
     <a id="waActionBtn" href="#" target="_blank" class="btn" style="background:#25d366; color:#fff; text-decoration:none; padding:12px; border-radius:12px; font-size:14px; text-align:center;">1️⃣ اضغط لفتح واتساب الطالب</a>
     <div style="display:flex; gap:10px;">
       <button class="btn" style="flex:1; background:var(--gold-main); color:#000; font-size:13px; padding:10px; border:0; border-radius:10px; cursor:pointer;" onclick="nextWhatsAppStudent()">الطالب التالي ➡️</button>
@@ -640,7 +637,6 @@ function filterDashboardData() {
   }
 }
 
-// نظام الواتساب الجماعي العائم الآمن 100% للهواتف والكمبيوتر
 function startBulkWhatsAppQueue() {
   const selectedExam = document.getElementById('filterExamTitle').value.trim();
   if(!selectedExam) {
