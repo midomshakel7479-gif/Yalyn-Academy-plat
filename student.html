@@ -13,6 +13,7 @@
     --gold-dark: #b45309;
     --text-main: #ffffff;
     --text-muted: #9ca3af;
+    --line: rgba(251, 191, 36, 0.15);
   }
   * { box-sizing: border-box; }
   body {
@@ -44,6 +45,10 @@
   .q-card { background: linear-gradient(145deg, #1f1f1f, #0d0d0d); border: 1px solid var(--gold-main); border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left; }
   .choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
   .choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
+  
+  /* إضافات الفيديوهات */
+  .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid var(--line); }
+  .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 </style>
 </head>
 <body>
@@ -64,7 +69,7 @@
     </div>
   </div>
 
-  <!-- لوحة تحكم الطالب -->
+  <!-- لوحة تحكم الطالب (تمت إضافة الفيديوهات إليها) -->
   <div id="dashboardView" style="display:none">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:#000;padding:15px 20px;border-radius:18px;border:1px solid rgba(251,191,36,0.2);">
       <div>
@@ -73,10 +78,17 @@
       </div>
       <button onclick="logout()" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:bold;">خروج</button>
     </div>
+    
     <h3 style="font-size:18px;color:var(--text-main);margin:25px 0 15px;">📜 الامتحانات المتاحة:</h3>
     <div id="examsListContainer"></div>
+    
     <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
     <div id="historyListContainer"></div>
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:35px; border-bottom:1px solid rgba(251,191,36,0.2); padding-bottom:10px;">
+       <h3 style="font-size:18px;color:var(--text-main);margin:0;">🎬 الفيديوهات والدروس المسجلة:</h3>
+    </div>
+    <div id="videosListContainer" style="margin-top:15px;"></div>
   </div>
 
   <!-- واجهة الامتحان -->
@@ -105,7 +117,7 @@
 
 <script src="config.js"></script>
 <script>
-const cfg = window.YALYN_CONFIG || { webAppUrl: "رابط_تطبيق_جوجل_هنا" }; 
+const cfg = window.YALYN_CONFIG || {}; 
 let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
@@ -143,8 +155,11 @@ async function loadDashboard() {
 
   const examsBox = document.getElementById('examsListContainer');
   const historyBox = document.getElementById('historyListContainer');
+  const videosBox = document.getElementById('videosListContainer');
+  
   examsBox.innerHTML = "<div style='color:var(--gold-main);text-align:center;'>جاري التحميل...</div>";
   historyBox.innerHTML = "";
+  videosBox.innerHTML = "";
 
   try {
     const res = await fetch(cfg.webAppUrl, {
@@ -190,6 +205,23 @@ async function loadDashboard() {
     } else {
       examsBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#f87171;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
     }
+
+    // جلب وعرض الفيديوهات
+    if (data.videos && data.videos.length > 0) {
+      data.videos.forEach(v => {
+        videosBox.innerHTML += `
+          <div class="q-card" style="margin-bottom:15px; padding:15px; text-align:right; direction:rtl;">
+            <h4 style="color:var(--gold-main); margin:0 0 12px 0; font-size:16px;">▶ ${v.title}</h4>
+            <div class="video-wrapper">
+              <iframe src="${v.url}" allowfullscreen></iframe>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      videosBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;'>لا توجد فيديوهات متاحة لهذا الصف حالياً.</div>";
+    }
+
   } catch(e) { examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>"; }
 }
 
@@ -266,10 +298,21 @@ async function submitExam() {
   let score = 0; const reviewList = [];
   activeExamQuestions.forEach((q, idx) => {
     let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
-    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } 
-    else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
-    const isCorrect = studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase();
+    if(isMcq) { 
+      const checked = document.querySelector(`input[name="q_${idx}"]:checked`); 
+      if(checked) studentAns = toStr(checked.value); 
+    } else { 
+      const inp = document.getElementById(`complete_ans_${idx}`); 
+      if(inp) studentAns = toStr(inp.value); 
+    }
+
+    // التعديل الذكي: إزالة كل الفواصل والمسافات قبل التصحيح لتجنب أخطاء الطلاب
+    const cleanStudentAns = studentAns.replace(/[, ]/g, '').toLowerCase();
+    const cleanCorrectAns = toStr(q.correctAnswer).replace(/[, ]/g, '').toLowerCase();
+    
+    const isCorrect = (cleanStudentAns === cleanCorrectAns);
     if(isCorrect) score++;
+
     reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
   });
 
@@ -317,7 +360,4 @@ function renderReviewScreen(reviewList, scoreStr) {
   });
 }
 
-function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }
-</script>
-</body>
-</html>
+function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 
