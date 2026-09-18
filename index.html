@@ -112,7 +112,7 @@ select.field { cursor: pointer; }
 .btn-whatsapp:hover { filter: brightness(1.1); transform: translateY(-1px); }
 
 .student-modal { position: fixed; inset: 0; z-index: 11000; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
-.student-modal-card { width: min(450px, 100%); padding: 30px; border-radius: 25px; background: #141414; border: 1px solid var(--gold-main); box-shadow: 0 25px 60px rgba(0,0,0,0.9); }
+.student-modal-card { width: min(500px, 100%); padding: 30px; border-radius: 25px; background: #141414; border: 1px solid var(--gold-main); box-shadow: 0 25px 60px rgba(0,0,0,0.9); }
 .question-review-item { background: rgba(255,255,255,0.02); border: 1px solid var(--line); padding: 18px; border-radius: 16px; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 15px; }
 .question-review-item input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--gold-main); margin-top: 4px; cursor: pointer; }
 
@@ -123,6 +123,12 @@ select.field { cursor: pointer; }
   display: none; animation: slideUp 0.3s ease;
 }
 @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+@media print {
+  body * { visibility: hidden; }
+  #printReportArea, #printReportArea * { visibility: visible; }
+  #printReportArea { position: absolute; left: 0; top: 0; width: 100%; color: #000; background: #fff; padding: 20px; }
+}
 </style>
 </head>
 <body>
@@ -139,7 +145,8 @@ select.field { cursor: pointer; }
     <button onclick="go('students',this)"><span class="icon">♙</span><span>تسجيل الطلاب</span></button>
     <button onclick="go('exams',this)"><span class="icon">✎</span><span>توليد الامتحانات من PDF</span></button>
     <button onclick="go('results',this)"><span class="icon">📊</span><span>متابعة النتائج والغياب</span></button>
-    <button onclick="go('videos',this)"><span class="icon">🎬</span><span>إدارة وعرض الفيديوهات</span></button>
+    <button onclick="go('videos',this)"><span class="icon">🎬</span><span>إدارة الفيديوهات التعليمية</span></button>
+    <button onclick="go('monthlyReport',this)"><span class="icon">📜</span><span>التقارير والدرجات الخارجية</span></button>
   </nav>
 </aside>
 
@@ -148,10 +155,10 @@ select.field { cursor: pointer; }
 <section id="dashboard" class="view active">
   <div class="hero">
     <h1>أهلاً بك، <span>الأستاذ المعلم</span> 👋</h1>
-    <p>منصة إدارة Yalyn Academy. يمكنك من هنا متابعة درجات الطلاب، توليد الامتحانات الذكية من ملفات الـ PDF، ورفع الفيديوهات التعليمية بأسلوب احترافي.</p>
+    <p>منصة إدارة Yalyn Academy. يمكنك من هنا متابعة درجات الطلاب، توليد الامتحانات الذكية من ملفات الـ PDF، رفع الفيديوهات التعليمية، وإخراج التقارير الشهرية الشاملة.</p>
     <div class="actions">
       <button class="btn" onclick="go('results')">📊 متابعة النتائج والغياب</button>
-      <button class="btn alt" onclick="go('exams')">＋ توليد امتحان جديد</button>
+      <button class="btn alt" onclick="go('monthlyReport')">📜 التقارير والامتحانات الخارجية</button>
     </div>
   </div>
 </section>
@@ -207,7 +214,7 @@ select.field { cursor: pointer; }
 <section id="resultsPanel" class="view">
   <div class="hero">
     <h1>متابعة النتائج <span>والغياب للطلاب</span></h1>
-    <p>تابع درجات الطلاب الذين أتموا الاختبارات، وتواصل بضغطة زر مع أولياء أمور الطلاب الذين لم يؤدوا الامتحان عبر الواتساب.</p>
+    <p>تابع درجات الطلاب الذين أتموا الاختبارات، وتواصل بضغطة زر مع أولياء أمور الطلاب الذين لم تؤدوا الامتحان عبر الواتساب.</p>
     <div class="actions"><button class="btn" onclick="loadTeacherDashboard()">تحديث البيانات وتعبئة القوائم 🔄</button></div>
   </div>
 
@@ -256,10 +263,76 @@ select.field { cursor: pointer; }
   </div>
 </section>
 
+<!-- قسم إضافة وإدارة الفيديوهات -->
 <section id="videosPanel" class="view">
   <div class="hero">
     <h1>إدارة وعرض <span>الفيديوهات التعليمية</span></h1>
-    <p>قم بربط وإضافة الفيديوهات التعليمية (يوتيوب أو روابط مباشرة) لتظهر مباشرة لطلابك داخل المنصة.</p>
+    <p>قم بربط وإضافة الفيديوهات التعليمية (يوتيوب أو درايف) لتظهر مباشرة للطلاب وفق صفوفهم الدراسية.</p>
+  </div>
+
+  <div class="card">
+    <div class="panel-head"><h3>إضافة فيديو تعليمي جديد</h3></div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:15px; margin-bottom:15px;">
+      <label class="muted">عنوان الفيديو<input id="vidTitle" class="field" placeholder="شرح الدرس الأول - Algebra"></label>
+      <label class="muted">الصف الدراسي<input id="vidGrade" class="field" placeholder="Grade 4"></label>
+      <label class="muted">رابط الفيديو (YouTube / Drive)<input id="vidLink" class="field" placeholder="https://..." dir="ltr"></label>
+    </div>
+    <button class="btn" id="saveVidBtn" onclick="saveVideoToSheet()">📺 نشر الفيديو للطلاب</button>
+  </div>
+</section>
+
+<!-- قسم التقارير الشهرية والامتحانات الخارجية -->
+<section id="monthlyReportPanel" class="view">
+  <div class="hero">
+    <h1>التقارير الشهرية <span>والامتحانات الخارجية</span></h1>
+    <p>أدخل درجات الاختبارات الورقية/الخارجية، واستخرج تقريراً شهرياً كاملاً للطالب لإرساله لولي الأمر.</p>
+  </div>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit,minmax(380px,1fr)); gap:20px;">
+    <!-- كارت إدخال الدرجات الخارجية -->
+    <div class="card">
+      <div class="panel-head"><h3>📝 رصد درجة امتحان خارجي (ورقي)</h3></div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <label class="muted">اختر الطالب:
+          <select id="extStudentSelect" class="field">
+            <option value="">-- اختر الطالب --</option>
+          </select>
+        </label>
+        <label class="muted">اسم الامتحان الخارجي<input id="extExamName" class="field" placeholder="مثال: اختبار الشهر الورقي - أكتوبر"></label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label class="muted">درجة الطالب<input type="number" id="extScore" class="field" placeholder="18"></label>
+          <label class="muted">الدرجة النهائية<input type="number" id="extMaxScore" class="field" placeholder="20"></label>
+        </div>
+        <button class="btn" style="margin-top:10px;" onclick="saveExternalExamScore()">💾 حفظ الدرجة في ملف الطالب</button>
+      </div>
+    </div>
+
+    <!-- كارت استخراج التقرير الشهري -->
+    <div class="card">
+      <div class="panel-head"><h3>📜 استخراج التقرير الشهري للطالب</h3></div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <label class="muted">اختر الطالب لاستخراج تقريره:
+          <select id="reportStudentSelect" class="field">
+            <option value="">-- اختر الطالب --</option>
+          </select>
+        </label>
+        <button class="btn" style="background: linear-gradient(135deg, #34d399, #059669); color:#fff; border:0;" onclick="generateStudentMonthlyReport()">🔍 عرض وتوليد التقرير</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- شاشة المعاينة والطباعة والواتساب للتقرير -->
+  <div class="card" id="reportPreviewCard" style="display:none; margin-top:20px;">
+    <div class="panel-head">
+      <h3>معاينة التقرير الشهري</h3>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" style="padding:8px 16px; font-size:13px;" onclick="window.print()">🖨️ طباعة التقرير</button>
+        <a id="sendReportWaBtn" target="_blank" class="btn-whatsapp" style="padding:8px 16px; font-size:13px; border-radius:50px;">💬 إرسال التقرير لولي الأمر</a>
+      </div>
+    </div>
+    <div id="printReportArea" style="background:#fff; color:#000; padding:25px; border-radius:15px; font-family:'Cairo', sans-serif;">
+      <!-- سيتم تعبئة تفاصيل التقرير هنا عبر الجافاسكريبت -->
+    </div>
   </div>
 </section>
 
@@ -313,6 +386,7 @@ function go(id, btn){
   if(id === 'exams') document.getElementById('examsPanel').classList.add('active');
   if(id === 'results') { document.getElementById('resultsPanel').classList.add('active'); loadTeacherDashboard(); }
   if(id === 'videos') { document.getElementById('videosPanel').classList.add('active'); }
+  if(id === 'monthlyReport') { document.getElementById('monthlyReportPanel').classList.add('active'); populateReportStudentsDropdown(); }
 }
 
 function openStudentModal(){ document.getElementById('studentModal').style.display='flex'; }
@@ -338,6 +412,7 @@ async function addStudent() {
        document.getElementById('newStudentGrade').value='';
        document.getElementById('newParentPhone').value='';
        closeStudentModal();
+       loadTeacherDashboard();
     } else { err.textContent = result.message; }
   } catch(e) { err.textContent = "خطأ في الاتصال بالشيت."; }
 }
@@ -432,7 +507,7 @@ ${fullExtractedText}`;
               <span class="pill">${isMcq ? "اختياري" : "أكمل"}</span>
             </div>
             <div style="font-size: 14px; color: #fff; margin-top: 6px; line-height: 1.5;">${q.question}</div>
-            ${isMcq ? `<div style="font-size:12px; color:var(--text-muted); margin-top:4px;">الخيارات: [${q.choice1}, ${q.choice2}, ${q.choice3}, ${q.choice4}]</div>` : ''}
+            ${isMcq ? `<div style="font-size:12px; color:var(--text-muted); margin-top:4px;">الخيارات: [${q.choice1},${q.choice2}, ${q.choice3},${q.choice4}]</div>` : ''}
             <div style="font-size: 12px; color: var(--gold-light); margin-top: 6px;">الإجابة: <b>${q.correctAnswer}</b></div>
           </div>
         </div>
@@ -494,6 +569,7 @@ async function saveExtractedToSheet() {
 
 let globalStudents = [];
 let globalResults = [];
+let globalExternalResults = [];
 let currentNotSubmittedQueue = [];
 let queueIndex = 0;
 
@@ -507,6 +583,7 @@ async function loadTeacherDashboard() {
     if(data.success) {
       globalStudents = data.students || [];
       globalResults = data.results || [];
+      globalExternalResults = data.externalResults || [];
       
       const examsRes = await fetch(cfg.webAppUrl, {
         method: "POST",
@@ -516,7 +593,8 @@ async function loadTeacherDashboard() {
       window.globalExamsList = examsData.exams || [];
 
       populateGradeDropdown();
-      toast('تم تحديث البيانات وجلب الصفوف والامتحانات بنجاح.');
+      populateReportStudentsDropdown();
+      toast('تم تحديث البيانات وجلب القوائم بنجاح.');
     }
   } catch (e) { console.error(e); toast('خطأ في جلب البيانات.'); }
 }
@@ -570,21 +648,17 @@ function onGradeSelected() {
   filterDashboardData();
 }
 
-// الدالة الذكية لتنظيف الهواتف المصرية والدولية
 function formatPhoneNumber(rawPhone) {
   if(!rawPhone) return '';
-  let phone = rawPhone.toString().replace(/\D/g, ''); // إزالة أي مسافات أو رموز
-  if(phone.length < 8) return ''; // رقم غير صالح
+  let phone = rawPhone.toString().replace(/\D/g, ''); 
+  if(phone.length < 8) return ''; 
 
-  // إذا كان الرقم يبدأ بـ 01 (مثل 0101234)
   if(phone.startsWith('01') && phone.length === 11) {
     return '2' + phone; 
   }
-  // إذا كان الرقم مسجل بدون الصفر (مثل 101234 أو 1554) ويبدأ بـ 1
   if(phone.startsWith('1') && phone.length === 10) {
     return '20' + phone;
   }
-  // إذا كان الرقم دولي أو يبدأ بـ 20 أصلاً
   return phone;
 }
 
@@ -691,12 +765,10 @@ function updateWaQueueDisplay() {
   if(!formattedPhone) {
     waActionBtn.href = "#";
     waActionBtn.textContent = "⚠️ الطالب ليس لديه رقم مسجل (اضغط التالي)";
-    waActionBtn.style.background = "#6b7280";
   } else {
     const waMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${s.name}، نود تذكيركم بأن الطالب لم يقم بأداء امتحان (${selectedExam}) حتى الآن، برجاء سرعة الدخول للمنصة لأداء الاختبار.`);
     waActionBtn.href = `https://wa.me/${formattedPhone}?text=${waMsg}`;
-    waActionBtn.textContent = `1️⃣ إرسال واتساب إلى (${s.name})`;
-    waActionBtn.style.background = "#25d366";
+    waActionBtn.textContent = "1️⃣ اضغط لفتح واتساب الطالب";
   }
 }
 
@@ -707,8 +779,181 @@ function nextWhatsAppStudent() {
 
 function cancelWhatsAppQueue() {
   document.getElementById('waQueueBox').style.display = 'none';
-  toast('تم إيقاف الإرسال الجماعي.');
+  toast('تم إيقاف عملية الإرسال.');
 }
+
+// === حفظ الفيديو في الشيت ===
+async function saveVideoToSheet() {
+  const title = document.getElementById('vidTitle').value.trim();
+  const grade = document.getElementById('vidGrade').value.trim();
+  const link = document.getElementById('vidLink').value.trim();
+
+  if(!title || !grade || !link) {
+    toast('يرجى ملء جميع بيانات الفيديو.');
+    return;
+  }
+
+  const btn = document.getElementById('saveVidBtn');
+  btn.disabled = true; btn.textContent = "جاري الحفظ...";
+
+  try {
+    const res = await fetch(cfg.webAppUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: "saveVideo", title, grade, link })
+    });
+    const result = await res.json();
+    if(result.success) {
+      toast('تم حفظ الفيديو ونشره بنجاح للطلاب! 📺');
+      document.getElementById('vidTitle').value = "";
+      document.getElementById('vidLink').value = "";
+    } else { toast('حدث خطأ أثناء حفظ الفيديو.'); }
+  } catch(e) { toast('فشل الاتصال بالشيت.'); }
+  finally { btn.disabled = false; btn.textContent = "📺 نشر الفيديو للطلاب"; }
+}
+
+// === إضافة الخيارات للدرجات الخارجية والتقارير ===
+function populateReportStudentsDropdown() {
+  const extSelect = document.getElementById('extStudentSelect');
+  const repSelect = document.getElementById('reportStudentSelect');
+  
+  extSelect.innerHTML = `<option value="">-- اختر الطالب --</option>`;
+  repSelect.innerHTML = `<option value="">-- اختر الطالب --</option>`;
+
+  globalStudents.forEach(s => {
+    extSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.grade})</option>`;
+    repSelect.innerHTML += `<option value="${s.name}">${s.name} (${s.grade})</option>`;
+  });
+}
+
+// === حفظ درجات الامتحانات الخارجية ===
+async function saveExternalExamScore() {
+  const studentName = document.getElementById('extStudentSelect').value;
+  const examTitle = document.getElementById('extExamName').value.trim();
+  const score = document.getElementById('extScore').value.trim();
+  const maxScore = document.getElementById('extMaxScore').value.trim();
+
+  if(!studentName || !examTitle || !score || !maxScore) {
+    toast('الرجاء إدخال كافة بيانات الامتحان الخارجي.');
+    return;
+  }
+
+  const stObj = globalStudents.find(s => s.name === studentName);
+  const grade = stObj ? stObj.grade : "";
+  const dateStr = new Date().toLocaleDateString('ar-EG');
+  const finalScoreStr = `${score} / ${maxScore}`;
+
+  try {
+    const res = await fetch(cfg.webAppUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: "saveExternalScore", studentName, grade, examTitle, score: finalScoreStr, date: dateStr })
+    });
+    const result = await res.json();
+    if(result.success) {
+      toast('تم تسجيل درجة الامتحان الخارجي بنجاح!');
+      document.getElementById('extExamName').value = "";
+      document.getElementById('extScore').value = "";
+      document.getElementById('extMaxScore').value = "";
+      loadTeacherDashboard();
+    } else { toast('حدث خطأ أثناء الحفظ.'); }
+  } catch(e) { toast('خطأ في الاتصال بالخادم.'); }
+}
+
+// === توليد وعرض التقرير الشهري ===
+function generateStudentMonthlyReport() {
+  const studentName = document.getElementById('reportStudentSelect').value;
+  if(!studentName) { toast('اختر طالباً لعرض التقرير.'); return; }
+
+  const stObj = globalStudents.find(s => s.name === studentName);
+  const onlineScores = globalResults.filter(r => r.name && r.name.trim() === studentName);
+  const extScores = globalExternalResults.filter(r => r.studentName && r.studentName.trim() === studentName);
+
+  const reportArea = document.getElementById('printReportArea');
+  const previewCard = document.getElementById('reportPreviewCard');
+
+  let rowsHtml = "";
+  
+  onlineScores.forEach(r => {
+    rowsHtml += `
+      <tr>
+        <td style="padding:10px; border:1px solid #ddd;">${r.examTitle}</td>
+        <td style="padding:10px; border:1px solid #ddd; text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-weight:bold;">المنصة الإلكترونية</span></td>
+        <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#15803d;">${r.score}</td>
+        <td style="padding:10px; border:1px solid #ddd; text-align:center; color:#666;">${r.date}</td>
+      </tr>
+    `;
+  });
+
+  extScores.forEach(r => {
+    rowsHtml += `
+      <tr>
+        <td style="padding:10px; border:1px solid #ddd;">${r.examTitle}</td>
+        <td style="padding:10px; border:1px solid #ddd; text-align:center;"><span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-weight:bold;">اختبار ورقي / خارجي</span></td>
+        <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#15803d;">${r.score}</td>
+        <td style="padding:10px; border:1px solid #ddd; text-align:center; color:#666;">${r.date}</td>
+      </tr>
+    `;
+  });
+
+  if(onlineScores.length === 0 && extScores.length === 0) {
+    rowsHtml = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#888;">لا توجد درجات مسجلة لهذا الطالب حتى الآن.</td></tr>`;
+  }
+
+  reportArea.innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #fbbf24; padding-bottom:15px; margin-bottom:20px;">
+      <div>
+        <h2 style="margin:0; color:#000;">🎓 YALYN Academy</h2>
+        <p style="margin:5px 0 0; color:#666; font-size:14px;">التقرير الشهري لمتابعة أداء الطالب</p>
+      </div>
+      <div style="text-align:left;">
+        <h3 style="margin:0; color:#b45309;">تاريخ التقرير</h3>
+        <span style="font-size:14px; color:#444;">${new Date().toLocaleDateString('ar-EG')}</span>
+      </div>
+    </div>
+
+    <div style="background:#f8fafc; p:15px; border-radius:10px; padding:15px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:10px; border:1px solid #e2e8f0;">
+      <div><b>اسم الطالب:</b> ${stObj ? stObj.name : studentName}</div>
+      <div><b>الصف الدراسي:</b> ${stObj ? stObj.grade : '-'}</div>
+      <div><b>كود الطالب:</b> ${stObj ? stObj.code : '-'}</div>
+      <div><b>هاتف ولي الأمر:</b> ${stObj ? stObj.phone : '-'}</div>
+    </div>
+
+    <h4 style="margin-bottom:10px; color:#1e293b;">📊 سجل الاختبارات والتقييمات:</h4>
+    <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:14px;">
+      <thead>
+        <tr style="background:#f1f5f9; color:#334155;">
+          <th style="padding:10px; border:1px solid #cbd5e1; text-align:right;">عنوان الامتحان / التقييم</th>
+          <th style="padding:10px; border:1px solid #cbd5e1; text-align:center;">نوع التقييم</th>
+          <th style="padding:10px; border:1px solid #cbd5e1; text-align:center;">الدرجة</th>
+          <th style="padding:10px; border:1px solid #cbd5e1; text-align:center;">التاريخ</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rowsHtml}
+      </tbody>
+    </table>
+
+    <div style="margin-top:30px; border-top:1px dashed #ccc; padding-top:15px; display:flex; justify-content:space-between; font-size:13px; color:#555;">
+      <span>توقيع المعلم المسؤول: ..........................</span>
+      <span>خاتم الأكاديمية</span>
+    </div>
+  `;
+
+  // تجهيز رابط الواتساب الشامل لولي الأمر
+  const waBtn = document.getElementById('sendReportWaBtn');
+  if(stObj && stObj.phone) {
+    let formattedPhone = formatPhoneNumber(stObj.phone);
+    const textMsg = encodeURIComponent(`مرحباً ولي أمر الطالب/ة ${stObj.name}، إليكم التقرير الشهري للدرجات:\nعدد الامتحانات المؤداة: ${onlineScores.length + extScores.length}\nنتمنى للطالب المزيد من التوفيق والنجاح! 🎓`);
+    waBtn.href = `https://wa.me/${formattedPhone}?text=${textMsg}`;
+    waBtn.style.display = "inline-flex";
+  } else {
+    waBtn.style.display = "none";
+  }
+
+  previewCard.style.display = 'block';
+  toast('تم توليد التقرير بنجاح.');
+}
+
+window.onload = () => { loadTeacherDashboard(); };
 </script>
 </body>
 </html>
