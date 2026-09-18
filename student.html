@@ -1,339 +1,522 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YALYN Academy - منصة الطالب</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>YALYN Academy — منصة الطالب</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-dark: #0a0a0a;
+  --bg-panel: #141414;
+  --gold-light: #fde047;
+  --gold-main: #fbbf24;
+  --gold-dark: #b45309;
+  --text-main: #ffffff;
+  --text-muted: #9ca3af;
+  --border-glow: rgba(251, 191, 36, 0.3);
+  --line: rgba(251, 191, 36, 0.15);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0; color: var(--text-main); font-family: 'Inter', system-ui, sans-serif;
+  background: radial-gradient(circle at 50% 0%, #2a1f00 0%, var(--bg-dark) 50%, #000000 100%);
+  min-height: 100vh; overflow-x: hidden;
+}
+
+/* شاشة تسجيل الدخول */
+.login-overlay {
+  position: fixed; inset: 0; z-index: 99999; background: #0a0a0a;
+  display: flex; align-items: center; justify-content: center; padding: 20px;
+}
+.login-card {
+  width: min(450px, 100%); background: #141414; border: 1px solid var(--gold-main);
+  border-radius: 24px; padding: 35px; box-shadow: 0 20px 50px rgba(0,0,0,0.9); text-align: center;
+}
+.login-card .logo {
+  width: 60px; height: 60px; border-radius: 18px; margin: 0 auto 15px;
+  background: linear-gradient(135deg, #fde047, #f59e0b, #b45309);
+  display: grid; place-items: center; font-size: 32px; font-weight: 900; color: #000;
+  box-shadow: 0 0 20px rgba(251, 191, 36, 0.4);
+}
+
+.shell { display: flex; min-height: 100vh; direction: rtl; }
+.sidebar {
+  width: 260px; min-width: 260px; height: 100vh; position: sticky; top: 0;
+  background: #000000; border-left: 1px solid var(--line); padding: 20px 15px;
+  overflow-y: auto; z-index: 10;
+}
+.main { flex: 1; padding: 30px; max-width: 1400px; margin: 0 auto; overflow-y: auto; }
+
+@media(max-width: 900px) {
+  .shell { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: relative; }
+}
+
+.brand { display: flex; align-items: center; gap: 12px; padding: 10px 10px 25px; border-bottom: 1px solid var(--line); margin-bottom: 15px; }
+.brand b { font-size: 18px; color: #fff; }
+.brand small { display: block; color: var(--gold-main); letter-spacing: 2px; font-weight: 800; font-size: 11px; }
+
+.nav button {
+  width: 100%; display: flex; gap: 12px; align-items: center; border: 0; background: transparent;
+  color: var(--text-muted); padding: 14px 15px; border-radius: 14px; margin: 5px 0; text-align: right;
+  cursor: pointer; transition: .3s; font-size: 14px; font-weight: 600;
+}
+.nav button:hover, .nav button.active {
+  color: #000; background: linear-gradient(135deg, #fde047, #f59e0b);
+  box-shadow: 0 5px 20px rgba(245, 158, 11, 0.4);
+}
+
+.card {
+  border: 1px solid var(--line); border-radius: 24px;
+  background: linear-gradient(145deg, #161616, #0d0d0d);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.8); padding: 25px; margin-bottom: 20px;
+}
+.hero {
+  border: 1px solid var(--line); border-radius: 30px;
+  background: linear-gradient(135deg, #1f1800 0%, #141414 60%, #080808 100%);
+  padding: 35px; margin-bottom: 25px;
+}
+.hero h1 { font-size: 28px; margin: 0 0 10px; font-weight: 900; }
+.hero h1 span { color: var(--gold-main); }
+
+.field {
+  display: block; width: 100%; margin-top: 8px; background: #000;
+  border: 2px solid rgba(251, 191, 36, 0.4); border-radius: 14px; padding: 14px;
+  color: white; outline: 0; font-size: 15px; font-weight: 600; transition: 0.3s;
+}
+.field:focus { border-color: var(--gold-main); box-shadow: 0 0 15px var(--border-glow); }
+
+.btn {
+  border: 2px solid #fff; color: #000; padding: 12px 24px; border-radius: 50px;
+  background: linear-gradient(to bottom, #fde047, #f59e0b); font-weight: 900; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.4); transition: 0.3s; font-size: 15px; text-decoration: none; display: inline-block; text-align: center;
+}
+.btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+.view { display: none; }
+.view.active { display: block; }
+
+.table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+.table th, .table td { padding: 14px; border-bottom: 1px solid rgba(255,255,255,0.06); text-align: right; font-size: 14px; }
+.table th { color: var(--gold-main); font-weight: 700; }
+
+.pill { background: rgba(52, 211, 153, 0.15); color: #34d399; padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; border: 1px solid rgba(52, 211, 153, 0.3); }
+.pill-gold { background: rgba(251, 191, 36, 0.15); color: var(--gold-main); padding: 6px 12px; border-radius: 99px; font-size: 12px; font-weight: bold; border: 1px solid var(--border-glow); }
+
+/* تنسيق كروت الفيديوهات */
+.video-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.video-card {
+  background: #000; border: 1px solid var(--line); border-radius: 18px; padding: 20px;
+  display: flex; flex-direction: column; justify-content: space-between; gap: 15px; transition: 0.3s;
+}
+.video-card:hover { border-color: var(--gold-main); transform: translateY(-3px); }
+
+/* نافذة أداء الامتحان */
+.exam-modal { position: fixed; inset: 0; z-index: 10000; background: rgba(0,0,0,0.95); display: none; padding: 20px; overflow-y: auto; }
+.exam-container { max-width: 800px; margin: 40px auto; background: #141414; border: 1px solid var(--gold-main); border-radius: 25px; padding: 30px; }
+.q-box { background: rgba(255,255,255,0.02); border: 1px solid var(--line); border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+.opt-label { display: flex; align-items: center; gap: 10px; padding: 10px; background: #000; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-top: 8px; cursor: pointer; }
+.opt-label:hover { border-color: var(--gold-main); }
+.opt-label input { accent-color: var(--gold-main); width: 18px; height: 18px; }
+</style>
 </head>
-<body class="min-h-screen flex flex-col justify-between">
+<body>
 
-    <!-- Navbar -->
-    <header class="bg-indigo-700 text-white p-4 shadow-lg flex justify-between items-center">
-        <h1 class="text-xl font-bold">YALYN Academy 🎓</h1>
-        <div id="userInfo" class="hidden flex items-center space-x-3 space-x-reverse">
-            <span id="studentNameDisplay" class="font-semibold"></span>
-            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md transition">خروج</button>
+<!-- شاشة الدخول -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="logo">∑</div>
+    <h2 style="margin:0 0 10px; color:#fff;">دخول الطالب</h2>
+    <p style="color:var(--text-muted); font-size:14px; margin-bottom:20px;">أدخل اسمك والرقم السري الخاص بك للوصول للمنصة</p>
+    <div style="text-align:right;">
+      <label class="muted">الاسم الثلاثي<input id="studentNameInput" class="field" placeholder="أحمد محمد"></label>
+      <label class="muted" style="margin-top:10px; display:block;">الصف الدراسي<input id="studentGradeInput" class="field" placeholder="Grade 4"></label>
+      <label class="muted" style="margin-top:10px; display:block;">الرقم السري (الكود)<input id="studentCodeInput" type="password" class="field" placeholder="1234"></label>
+    </div>
+    <button class="btn" style="width:100%; margin-top:25px;" onclick="loginStudent()">دخول المنصة 🚀</button>
+    <div id="loginError" style="color:#fb7185; margin-top:12px; font-weight:bold; font-size:14px;"></div>
+  </div>
+</div>
+
+<div class="shell">
+<aside class="sidebar">
+  <div class="brand">
+    <div class="logo" style="width:38px; height:38px; font-size:20px;">∑</div>
+    <div><b id="sideStudentName">حساب الطالب</b><small id="sideStudentGrade">YALYN ACADEMY</small></div>
+  </div>
+  <nav class="nav">
+    <button id="btnExams" class="active" onclick="switchView('examsView', this)"><span class="icon">✎</span><span>الامتحانات المتاحة</span></button>
+    <button id="btnVideos" onclick="switchView('videosView', this)"><span class="icon">🎬</span><span>الفيديوهات التعليمية</span></button>
+    <button id="btnReport" onclick="switchView('reportView', this)"><span class="icon">📜</span><span>تقريري الشهري</span></button>
+    <button onclick="logout()" style="margin-top:30px; color:#ef4444;"><span class="icon">🚪</span><span>تسجيل الخروج</span></button>
+  </nav>
+</aside>
+
+<main class="main">
+
+  <!-- قسم الامتحانات المتاحة -->
+  <section id="examsView" class="view active">
+    <div class="hero">
+      <h1>أهلاً بك، <span id="welcomeName">طالبنا العزيز</span> 👋</h1>
+      <p>يمكنك أداء الاختبارات المتاحة لصفك الدراسي والمولدة بواسطة الذكاء الاصطناعي من هنا.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="margin:0; color:var(--gold-light);">📋 قائمة الامتحانات المتاحة</h3>
+        <button class="btn" style="padding:6px 16px; font-size:13px;" onclick="loadStudentData()">تحديث 🔄</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>عنوان الامتحان</th>
+              <th>الصف</th>
+              <th>عدد الأسئلة</th>
+              <th>الحالة</th>
+              <th>الإجراء</th>
+            </tr>
+          </thead>
+          <tbody id="studentExamsTable">
+            <tr><td colspan="5" class="muted" style="text-align:center;">جاري تحميل الامتحانات...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم الفيديوهات التعليمية -->
+  <section id="videosView" class="view">
+    <div class="hero">
+      <h1>المكتبة الرقمية <span>للفيديوهات</span> 🎬</h1>
+      <p>شاهد جميع الفيديوهات التعليمية التي قام معلمك بنشرها وتخصيصها لصفك الدراسي.</p>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 20px; color:var(--gold-light);">📺 الدروس والمحاضرات المتاحة</h3>
+      <div id="videosGrid" class="video-grid">
+        <div class="muted">جاري تحميل الفيديوهات...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- قسم التقرير الشهري للطالب -->
+  <section id="reportView" class="view">
+    <div class="hero">
+      <h1>تقرير الأداء <span>والدرجات الشهري</span> 📜</h1>
+      <p>سجل كامل يجمع كافة نتائجك في الاختبارات الإلكترونية بالمنصة والاختبارات الورقية الخارجية.</p>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--line); padding-bottom:15px;">
+        <div>
+          <h3 style="margin:0; color:var(--gold-light);" id="reportHeaderName">تقرير الطالب</h3>
+          <span class="muted" id="reportHeaderGrade">الصف الدراسي</span>
         </div>
-    </header>
+        <button class="btn" style="padding:8px 18px; font-size:13px;" onclick="loadStudentReport()">تحديث التقرير 🔄</button>
+      </div>
 
-    <main class="container mx-auto p-4 flex-grow max-w-3xl">
+      <div style="overflow-x:auto;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>عنوان الامتحان / التقييم</th>
+              <th>نوع الاختبار</th>
+              <th>الدرجة</th>
+              <th>التاريخ</th>
+            </tr>
+          </thead>
+          <tbody id="studentReportTable">
+            <tr><td colspan="4" class="muted" style="text-align:center;">جاري جلب بيانات التقرير...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 
-        <!-- 1. تسجيل الدخول -->
-        <div id="loginSection" class="bg-white p-6 rounded-xl shadow-md mt-10">
-            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">تسجيل دخول الطالب</h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">كود الطالب الخاص بك</label>
-                    <input type="text" id="studentCodeInput" placeholder="أدخل الكود الخاص بك" class="w-full border border-gray-300 p-3 rounded-lg text-center font-bold tracking-widest text-lg focus:ring-2 focus:ring-indigo-500 outline-none">
-                </div>
-                <button onclick="loginStudent()" id="loginBtn" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">دخول المنصة</button>
-                <p id="loginError" class="text-red-500 text-center text-sm hidden"></p>
-            </div>
-        </div>
+</main>
+</div>
 
-        <!-- 2. لوحة تحكم الطالب -->
-        <div id="dashboardSection" class="hidden space-y-6">
-            <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex justify-between items-center">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg" id="dashName"></h3>
-                    <p class="text-sm text-gray-600" id="dashGrade"></p>
-                </div>
-            </div>
+<!-- شاشة تقديم الامتحان -->
+<div id="examModal" class="exam-modal">
+  <div class="exam-container">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid var(--line); padding-bottom:15px; margin-bottom:20px;">
+      <h2 id="activeExamTitle" style="margin:0; color:var(--gold-main);">اسم الامتحان</h2>
+      <span id="activeExamCount" class="pill-gold">0 أسئلة</span>
+    </div>
 
-            <!-- الامتحانات المتاحة -->
-            <div class="bg-white p-5 rounded-xl shadow-md">
-                <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">الامتحانات المتاحة للصف الدراسي</h3>
-                <div id="examsList" class="space-y-3"></div>
-            </div>
+    <div id="questionsContainer"></div>
 
-            <!-- النتائج السابقة -->
-            <div class="bg-white p-5 rounded-xl shadow-md">
-                <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">سجل درجاتك السابقة</h3>
-                <div id="resultsList" class="space-y-3"></div>
-            </div>
-        </div>
+    <div style="display:flex; gap:15px; margin-top:25px;">
+      <button class="btn" style="flex:1;" onclick="submitExamAnswers()">إنهاء الامتحان وإرسال الإجابات 🏁</button>
+      <button class="btn" style="background:transparent; border-color:#ef4444; color:#ef4444; box-shadow:none;" onclick="closeExamModal()">إلغاء للخروج</button>
+    </div>
+  </div>
+</div>
 
-        <!-- 3. شاشة خوض الامتحان -->
-        <div id="examSection" class="hidden bg-white p-6 rounded-xl shadow-md">
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-                <h2 id="examTitleHead" class="font-bold text-xl text-indigo-700"></h2>
-                <span id="questionCounter" class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1 rounded-full font-bold"></span>
-            </div>
+<script src="config.js"></script>
+<script>
+const cfg = window.YALYN_CONFIG || {};
 
-            <div id="questionContainer" class="space-y-4">
-                <p id="qText" class="text-lg font-semibold text-gray-800"></p>
-                <div id="qImageContainer" class="hidden text-center my-3">
-                    <img id="qImage" src="" alt="صورة السؤال" class="max-h-64 mx-auto rounded-lg shadow-sm border">
-                </div>
+let currentStudent = { name: "", grade: "", code: "" };
+let currentExamQuestions = [];
+let activeExamTitle = "";
 
-                <div id="optionsContainer" class="space-y-2"></div>
-            </div>
+const toast=(t)=>{let e=document.getElementById('yalynToast'); if(!e){e=document.createElement('div');e.id='yalynToast';e.style.cssText='position:fixed;right:20px;bottom:20px;background:#141414;border:1px solid #fbbf24;color:#fff;padding:12px 20px;border-radius:14px;z-index:99999;box-shadow:0 15px 40px rgba(0,0,0,0.8);font-weight:bold;';document.body.appendChild(e)}e.textContent=t;e.style.display='block';clearTimeout(window.__toast);window.__toast=setTimeout(()=>e.style.display='none',3500)};
 
-            <div class="flex justify-between items-center mt-6 pt-4 border-t">
-                <button onclick="prevQuestion()" id="prevBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold disabled:opacity-50">السابق</button>
-                <button onclick="nextQuestion()" id="nextBtn" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700">التالي</button>
-                <button onclick="submitExam()" id="submitBtn" class="hidden bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700">إنهاء وتسليم</button>
-            </div>
-        </div>
+function switchView(viewId, btn) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  if(btn) btn.classList.add('active');
 
-        <!-- 4. شاشة المراجعة بعد التسليم -->
-        <div id="reviewSection" class="hidden bg-white p-6 rounded-xl shadow-md space-y-4">
-            <div class="text-center border-b pb-4">
-                <h2 class="text-2xl font-bold text-gray-800">نتيجة الامتحان</h2>
-                <div id="finalScoreDisplay" class="text-3xl font-extrabold text-indigo-600 my-2"></div>
-                <p class="text-sm text-gray-500">تم تسجيل نتيجتك بنجاح في النظام.</p>
-            </div>
-            <div id="reviewList" class="space-y-4"></div>
-            <button onclick="showDashboard()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">العودة للوحة الرئيسية</button>
-        </div>
+  if(viewId === 'videosView') loadStudentVideos();
+  if(viewId === 'reportView') loadStudentReport();
+}
 
-    </main>
+function loginStudent() {
+  const name = document.getElementById('studentNameInput').value.trim();
+  const grade = document.getElementById('studentGradeInput').value.trim();
+  const code = document.getElementById('studentCodeInput').value.trim();
+  const err = document.getElementById('loginError');
 
-    <script>
-        // ضع رابط الـ Web App الخاص بـ Apps Script هنا
-        const API_URL = "YOUR_EXACT_APPS_SCRIPT_WEB_APP_URL_HERE";
+  if(!name || !grade || !code) {
+    err.textContent = "يرجى إدخال جميع البيانات للتحقق.";
+    return;
+  }
 
-        let currentStudent = null;
-        let currentQuestions = [];
-        let currentExamTitle = "";
-        let currentQIndex = 0;
-        let userAnswers = {};
+  currentStudent = { name, grade, code };
+  document.getElementById('sideStudentName').textContent = name;
+  document.getElementById('sideStudentGrade').textContent = grade;
+  document.getElementById('welcomeName').textContent = name;
+  document.getElementById('reportHeaderName').textContent = "تقرير الطالب: " + name;
+  document.getElementById('reportHeaderGrade').textContent = "الصف الدراسي: " + grade;
 
-        function formatDriveImage(url) {
-            if (!url) return '';
-            const match = url.match(/(?:id=|\/d\/|src=)([\w-]+)/);
-            if (match && match[1]) {
-                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
-            }
-            return url;
+  document.getElementById('loginOverlay').style.display = 'none';
+  loadStudentData();
+}
+
+function logout() {
+  location.reload();
+}
+
+async function loadStudentData() {
+  const table = document.getElementById('studentExamsTable');
+  table.innerHTML = `<tr><td colspan="5" class="muted" style="text-align:center;">جاري تحميل الاختبارات المتاحة...</td></tr>`;
+
+  try {
+    let res = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade, studentName: currentStudent.name })
+    });
+    let data = await res.json();
+
+    if(data.success) {
+      const exams = data.exams || [];
+      const submittedTitles = (data.submittedExamTitles || []).map(t => t.toLowerCase());
+
+      table.innerHTML = "";
+      if(exams.length === 0) {
+        table.innerHTML = `<tr><td colspan="5" class="muted" style="text-align:center;">لا توجد امتحانات متاحة لصفك الدراسي حالياً.</td></tr>`;
+        return;
+      }
+
+      exams.forEach(ex => {
+        const isSubmitted = submittedTitles.includes(ex.examTitle.toLowerCase());
+        table.innerHTML += `
+          <tr>
+            <td><b>${ex.examTitle}</b></td>
+            <td>${ex.grade}</td>
+            <td>${ex.questionCount} أسئلة</td>
+            <td>${isSubmitted ? '<span class="pill">تم الأداء بنجاح</span>' : '<span class="pill-gold">متاح الآن</span>'}</td>
+            <td>
+              ${isSubmitted ? '<button class="btn" style="opacity:0.5; cursor:not-allowed; padding:6px 14px; font-size:12px;" disabled>تم التسليم</button>' 
+                            : `<button class="btn" style="padding:6px 14px; font-size:12px;" onclick="startExam('${ex.examTitle}')">بدء الاختبار 📝</button>`}
+            </td>
+          </tr>
+        `;
+      });
+    }
+  } catch(e) {
+    table.innerHTML = `<tr><td colspan="5" style="color:#ef4444; text-align:center;">حدث خطأ أثناء تحميل الامتحانات.</td></tr>`;
+  }
+}
+
+async function startExam(title) {
+  activeExamTitle = title;
+  document.getElementById('activeExamTitle').textContent = title;
+  document.getElementById('questionsContainer').innerHTML = `<p class="muted">جاري تحميل الأسئلة...</p>`;
+  document.getElementById('examModal').style.display = 'block';
+
+  try {
+    let res = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "getExamQuestions", examTitle: title })
+    });
+    let data = await res.json();
+
+    if(data.success && data.questions.length > 0) {
+      currentExamQuestions = data.questions;
+      document.getElementById('activeExamCount').textContent = `${data.questions.length} أسئلة`;
+      renderQuestions(data.questions);
+    } else {
+      document.getElementById('questionsContainer').innerHTML = `<p class="muted">لم يتم العثور على أسئلة لهذا الامتحان.</p>`;
+    }
+  } catch(e) {
+    toast('خطأ في جلب الأسئلة.');
+  }
+}
+
+function renderQuestions(questions) {
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = "";
+
+  questions.forEach((q, idx) => {
+    const isMcq = q.choice1 && q.choice1.trim() !== "";
+    let optionsHtml = "";
+
+    if(isMcq) {
+      const opts = [q.choice1, q.choice2, q.choice3, q.choice4];
+      opts.forEach(opt => {
+        if(opt) {
+          optionsHtml += `
+            <label class="opt-label">
+              <input type="radio" name="q_${idx}" value="${opt}">
+              <span>${opt}</span>
+            </label>
+          `;
         }
+      });
+    } else {
+      optionsHtml = `<input class="field" id="ans_${idx}" placeholder="اكتب إجابتك هنا...">`;
+    }
 
-        async function loginStudent() {
-            const code = document.getElementById('studentCodeInput').value.trim();
-            const btn = document.getElementById('loginBtn');
-            const err = document.getElementById('loginError');
-            if(!code) return alert("يرجى إدخال كود الطالب");
+    container.innerHTML += `
+      <div class="q-box">
+        <div style="font-weight:bold; margin-bottom:10px; color:#fff;">س${idx + 1}: ${q.question}</div>
+        ${optionsHtml}
+      </div>
+    `;
+  });
+}
 
-            btn.disabled = true;
-            btn.innerText = "جاري التحقق...";
-            err.classList.add('hidden');
+async function submitExamAnswers() {
+  let scoreCount = 0;
+  const total = currentExamQuestions.length;
 
-            try {
-                const res = await fetch(API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: "getStudentData", code: code })
-                });
-                const data = await res.json();
-                
-                if(data.success && data.student) {
-                    currentStudent = data.student;
-                    document.getElementById('loginSection').classList.add('hidden');
-                    document.getElementById('userInfo').classList.remove('hidden');
-                    document.getElementById('studentNameDisplay').innerText = currentStudent.name;
-                    loadDashboard();
-                } else {
-                    err.innerText = "الكود غير صحيح، يرجى التأكد منه والتحقق مجدداً";
-                    err.classList.remove('hidden');
-                }
-            } catch(e) {
-                alert("حدث خطأ أثناء الاتصال بالنظام: " + e.message);
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "دخول المنصة";
-            }
-        }
+  currentExamQuestions.forEach((q, idx) => {
+    const isMcq = q.choice1 && q.choice1.trim() !== "";
+    let userAns = "";
 
-        async function loadDashboard() {
-            document.getElementById('dashName').innerText = currentStudent.name;
-            document.getElementById('dashGrade').innerText = "الصف الدراسي: " + currentStudent.grade;
-            document.getElementById('dashboardSection').classList.remove('hidden');
+    if(isMcq) {
+      const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
+      if(checked) userAns = checked.value.trim();
+    } else {
+      const inp = document.getElementById(`ans_${idx}`);
+      if(inp) userAns = inp.value.trim();
+    }
 
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade, studentName: currentStudent.name })
-            });
-            const data = await res.json();
+    if(userAns.toLowerCase() === q.correctAnswer.trim().toLowerCase()) {
+      scoreCount++;
+    }
+  });
 
-            // عرض الامتحانات
-            const examsDiv = document.getElementById('examsList');
-            examsDiv.innerHTML = "";
-            if(data.exams && data.exams.length > 0) {
-                data.exams.forEach(ex => {
-                    examsDiv.innerHTML += `
-                        <div class="flex justify-between items-center p-3 border rounded-lg bg-gray-50">
-                            <span class="font-bold text-gray-700">${ex.examTitle}</span>
-                            <button onclick="startExam('${ex.examTitle}')" class="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-lg font-bold hover:bg-indigo-700">بدء الامتحان</button>
-                        </div>
-                    `;
-                });
-            } else {
-                examsDiv.innerHTML = `<p class="text-gray-500 text-sm">لا توجد امتحانات متاحة لصفك حالياً.</p>`;
-            }
+  const finalScoreStr = `${scoreCount} / ${total}`;
+  const dateStr = new Date().toLocaleDateString('ar-EG');
 
-            // عرض النتائج
-            const resDiv = document.getElementById('resultsList');
-            resDiv.innerHTML = "";
-            if(data.results && data.results.length > 0) {
-                data.results.forEach(r => {
-                    resDiv.innerHTML += `
-                        <div class="flex justify-between items-center p-3 border rounded-lg">
-                            <div>
-                                <p class="font-bold text-gray-800">${r.examTitle}</p>
-                                <p class="text-xs text-gray-500">${r.date}</p>
-                            </div>
-                            <span class="font-extrabold text-indigo-600 text-lg">${r.score}</span>
-                        </div>
-                    `;
-                });
-            } else {
-                resDiv.innerHTML = `<p class="text-gray-500 text-sm">لم تقم بأداء أي امتحانات بعد.</p>`;
-            }
-        }
+  try {
+    let res = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "submitExamResult",
+        studentName: currentStudent.name,
+        grade: currentStudent.grade,
+        examTitle: activeExamTitle,
+        score: finalScoreStr,
+        date: dateStr
+      })
+    });
+    let result = await res.json();
+    if(result.success) {
+      toast(`تم تسليم الاختبار بنجاح! درجتك هي: ${finalScoreStr}`);
+      closeExamModal();
+      loadStudentData();
+    }
+  } catch(e) {
+    toast('حدث خطأ أثناء حفظ النتيجة.');
+  }
+}
 
-        async function startExam(title) {
-            currentExamTitle = title;
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('examSection').classList.remove('hidden');
-            document.getElementById('examTitleHead').innerText = title;
+function closeExamModal() {
+  document.getElementById('examModal').style.display = 'none';
+}
 
-            const res = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "getExamQuestions", examTitle: title })
-            });
-            const data = await res.json();
-            currentQuestions = data.questions || [];
-            currentQIndex = 0;
-            userAnswers = {};
-            renderQuestion();
-        }
+async function loadStudentVideos() {
+  const grid = document.getElementById('videosGrid');
+  grid.innerHTML = `<div class="muted">جاري جلب الفيديوهات...</div>`;
 
-        function renderQuestion() {
-            const q = currentQuestions[currentQIndex];
-            document.getElementById('questionCounter').innerText = `سؤال ${currentQIndex + 1} من ${currentQuestions.length}`;
-            document.getElementById('qText').innerText = q.question;
+  try {
+    let res = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "getStudentVideos", grade: currentStudent.grade })
+    });
+    let data = await res.json();
 
-            // الصورة
-            const imgEl = document.getElementById('qImage');
-            const imgBox = document.getElementById('qImageContainer');
-            if(q.image) {
-                imgEl.src = formatDriveImage(q.image);
-                imgBox.classList.remove('hidden');
-            } else {
-                imgBox.classList.add('hidden');
-            }
+    grid.innerHTML = "";
+    if(data.success && data.videos.length > 0) {
+      data.videos.forEach(v => {
+        grid.innerHTML += `
+          <div class="video-card">
+            <div>
+              <span class="pill-gold">${v.grade}</span>
+              <h3 style="margin:12px 0 0; color:#fff; font-size:16px;">${v.title}</h3>
+            </div>
+            <a href="${v.link}" target="_blank" class="btn" style="padding:10px; font-size:13px;">▶ مشاهدة الفيديو الان</a>
+          </div>
+        `;
+      });
+    } else {
+      grid.innerHTML = `<div class="muted">لا توجد فيديوهات تعليمية مضافة لصفك الدراسي حتى الآن.</div>`;
+    }
+  } catch(e) {
+    grid.innerHTML = `<div style="color:#ef4444;">حدث خطأ في تحميل الفيديوهات.</div>`;
+  }
+}
 
-            // الخيارات
-            const optsBox = document.getElementById('optionsContainer');
-            optsBox.innerHTML = "";
+async function loadStudentReport() {
+  const table = document.getElementById('studentReportTable');
+  table.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;">جاري تحميل تقرير الدرجات...</td></tr>`;
 
-            // التحقق مما إذا كان السؤال اختياري أم مقالي
-            const choices = [q.choice1, q.choice2, q.choice3, q.choice4].filter(c => String(c).trim() !== "");
+  try {
+    let res = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      body: JSON.stringify({ action: "getStudentFullReport", studentName: currentStudent.name })
+    });
+    let data = await res.json();
 
-            if(choices.length > 0) {
-                choices.forEach(opt => {
-                    const isSelected = userAnswers[currentQIndex] === opt;
-                    optsBox.innerHTML += `
-                        <label class="flex items-center p-3 border rounded-lg cursor-pointer transition ${isSelected ? 'bg-indigo-50 border-indigo-500' : 'hover:bg-gray-50'}">
-                            <input type="radio" name="opt" value="${opt}" ${isSelected ? 'checked' : ''} onchange="selectOption('${opt}')" class="ml-3">
-                            <span class="text-gray-800 font-medium">${opt}</span>
-                        </label>
-                    `;
-                });
-            } else {
-                // سؤال مقالي
-                optsBox.innerHTML = `
-                    <textarea oninput="selectOption(this.value)" placeholder="اكتب إجابتك هنا..." class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">${userAnswers[currentQIndex] || ''}</textarea>
-                `;
-            }
-
-            // الأزرار
-            document.getElementById('prevBtn').disabled = (currentQIndex === 0);
-            if(currentQIndex === currentQuestions.length - 1) {
-                document.getElementById('nextBtn').classList.add('hidden');
-                document.getElementById('submitBtn').classList.remove('hidden');
-            } else {
-                document.getElementById('nextBtn').classList.remove('hidden');
-                document.getElementById('submitBtn').classList.add('hidden');
-            }
-        }
-
-        function selectOption(val) { userAnswers[currentQIndex] = val; }
-        function nextQuestion() { if(currentQIndex < currentQuestions.length - 1) { currentQIndex++; renderQuestion(); } }
-        function prevQuestion() { if(currentQIndex > 0) { currentQIndex--; renderQuestion(); } }
-
-        async function submitExam() {
-            if(!confirm("هل أنت تأكد من تسليم الامتحان؟")) return;
-
-            let scoreCount = 0;
-            let reviewArr = [];
-
-            currentQuestions.forEach((q, idx) => {
-                const uAns = userAnswers[idx] || "بدون إجابة";
-                const cAns = q.correctAnswer;
-                const isCorrect = String(uAns).trim().toLowerCase() === String(cAns).trim().toLowerCase();
-                if(isCorrect) scoreCount++;
-
-                reviewArr.push({
-                    question: q.question,
-                    studentAns: uAns,
-                    correctAns: cAns,
-                    isCorrect: isCorrect
-                });
-            });
-
-            const finalScoreStr = `${scoreCount} / ${currentQuestions.length}`;
-            const dateStr = new Date().toLocaleDateString('ar-EG');
-
-            await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({
-                    action: "saveStudentResult",
-                    studentName: currentStudent.name,
-                    grade: currentStudent.grade,
-                    examTitle: currentExamTitle,
-                    score: finalScoreStr,
-                    date: dateStr,
-                    reviewData: JSON.stringify(reviewArr)
-                })
-            });
-
-            // عرض شاشة المراجعة
-            document.getElementById('examSection').classList.add('hidden');
-            document.getElementById('reviewSection').classList.remove('hidden');
-            document.getElementById('finalScoreDisplay').innerText = finalScoreStr;
-
-            const revBox = document.getElementById('reviewList');
-            revBox.innerHTML = "";
-            reviewArr.forEach((item, i) => {
-                revBox.innerHTML += `
-                    <div class="p-4 border rounded-lg ${item.isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
-                        <p class="font-bold text-gray-800">${i+1}. ${item.question}</p>
-                        <p class="text-sm mt-1">إجابتك: <span class="${item.isCorrect ? 'text-green-700' : 'text-red-700'} font-bold">${item.studentAns}</span></p>
-                        ${!item.isCorrect ? `<p class="text-sm text-gray-600">الإجابة الصحيحة: <span class="font-bold text-green-700">${item.correctAns}</span></p>` : ''}
-                    </div>
-                `;
-            });
-        }
-
-        function showDashboard() {
-            document.getElementById('reviewSection').classList.add('hidden');
-            loadDashboard();
-        }
-
-        function logout() {
-            currentStudent = null;
-            document.getElementById('dashboardSection').classList.add('hidden');
-            document.getElementById('examSection').classList.add('hidden');
-            document.getElementById('reviewSection').classList.add('hidden');
-            document.getElementById('userInfo').classList.add('hidden');
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('studentCodeInput').value = "";
-        }
-    </script>
+    table.innerHTML = "";
+    if(data.success && data.report.length > 0) {
+      data.report.forEach(item => {
+        const isOnline = item.type === "اختبار إلكتروني";
+        table.innerHTML += `
+          <tr>
+            <td><b>${item.examTitle}</b></td>
+            <td><span class="${isOnline ? 'pill' : 'pill-gold'}">${item.type}</span></td>
+            <td><b style="color:var(--gold-main); font-size:16px;">${item.score}</b></td>
+            <td style="color:var(--text-muted); font-size:12px;">${item.date}</td>
+          </tr>
+        `;
+      });
+    } else {
+      table.innerHTML = `<tr><td colspan="4" class="muted" style="text-align:center;">لا توجد نتائج مسجلة لك حتى الآن.</td></tr>`;
+    }
+  } catch(e) {
+    table.innerHTML = `<tr><td colspan="4" style="color:#ef4444; text-align:center;">حدث خطأ في جلب التقرير.</td></tr>`;
+  }
+}
+</script>
 </body>
 </html>
