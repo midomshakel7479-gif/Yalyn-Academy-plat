@@ -1,320 +1,339 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>YALYN Academy - Student Portal</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
-<style>
-  :root {
-    --bg-dark: #0a0a0a;
-    --gold-light: #fde047;
-    --gold-main: #fbbf24;
-    --gold-dark: #b45309;
-    --text-main: #ffffff;
-    --text-muted: #9ca3af;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; color: var(--text-main); font-family: 'Inter', sans-serif;
-    background: radial-gradient(circle at 50% 0%, #2a1f00 0%, var(--bg-dark) 50%, #000000 100%);
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-  }
-  .app-card {
-    width: min(750px, 100%);
-    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-    border: 1px solid rgba(251, 191, 36, 0.15);
-    border-radius: 30px; padding: 40px;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-  }
-  .brand-title {
-    font-size: 50px; margin: 0; font-weight: 900; text-align: center;
-    background: linear-gradient(to bottom, #fff7d6, #fbb034, #b45309);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .brand-subtitle { font-size: 20px; font-weight: 800; color: #fff; text-align: center; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
-  .input-wrapper { position: relative; margin-bottom: 25px; }
-  .field { width: 100%; background: #000; border: 2px solid var(--gold-main); border-radius: 50px; padding: 18px 20px; color: white; outline: 0; font-size: 16px; font-weight: 600; text-align: center; }
-  .btn-login { width: 100%; padding: 16px; border-radius: 50px; border: 2px solid #fff; background: linear-gradient(to bottom, #fde047, #f59e0b); color: #000; font-weight: 900; font-size: 20px; cursor: pointer; transition: 0.3s; }
-  .btn-login:hover { transform: translateY(-3px); filter: brightness(1.1); }
-  .exam-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(251, 191, 36, 0.2); padding: 18px 22px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-  .pill { background: rgba(251, 191, 36, 0.15); color: var(--gold-light); padding: 6px 14px; border-radius: 99px; font-size: 15px; font-weight: 800; border: 1px solid var(--gold-main); }
-  .pill-gray { background: #222; color: #777; padding: 6px 14px; border-radius: 99px; font-size: 13px; border: 1px solid #444; }
-  .btn { border: 1px solid var(--gold-main); color: #000; padding: 10px 20px; border-radius: 12px; background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer; font-size: 15px; }
-  .q-card { background: linear-gradient(145deg, #1f1f1f, #0d0d0d); border: 1px solid var(--gold-main); border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left; }
-  .choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
-  .choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YALYN Academy - منصة الطالب</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+    </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col justify-between">
 
-<div class="app-card" id="app">
-  <div id="loginView">
-    <div class="brand-title" dir="ltr">YALYAN</div>
-    <div class="brand-subtitle" dir="ltr">ACADEMY</div>
-    <div class="input-wrapper" dir="ltr">
-      <input type="password" id="studentCode" class="field" placeholder="Enter Your Student Code">
-    </div>
-    <button class="btn-login" onclick="studentLogin()">Login ➔</button>
-    <div id="loginError" style="color:#f87171;font-size:15px;text-align:center;margin-top:15px;font-weight:600;"></div>
-    <div style="margin-top:40px; border:2px solid var(--gold-main); border-radius:15px; padding:15px; background:#000; text-align:center;">
-      <div style="color:var(--gold-main); font-size:14px; font-weight:bold;">Made By :</div>
-      <div style="font-weight:800; font-size:18px; color:#fff; margin:5px 0;">Mr. Mohamed Abdulfatah</div>
-    </div>
-  </div>
-
-  <div id="dashboardView" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:#000;padding:15px 20px;border-radius:18px;border:1px solid rgba(251,191,36,0.2);">
-      <div>
-        <h2 id="dashStudentName" style="margin:0;color:#fff;font-size:20px;"></h2>
-        <span id="dashStudentGrade" style="color:var(--gold-main);font-size:14px;font-weight:600;"></span>
-      </div>
-      <button onclick="logout()" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:bold;">خروج</button>
-    </div>
-    <h3 style="font-size:18px;color:var(--text-main);margin:25px 0 15px;">📜 الامتحانات المتاحة:</h3>
-    <div id="examsListContainer"></div>
-    <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
-    <div id="historyListContainer"></div>
-  </div>
-
-  <div id="examView" style="display:none">
-    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h3 id="currentExamTitle" style="margin:0;color:#fff;font-size:20px;"></h3>
-      <span class="pill" id="questionCountBadge"></span>
-    </div>
-    <div id="questionsRenderBox"></div>
-    <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">إنهاء الامتحان (Finish)</button>
-    <div id="examStatusMsg" style="text-align:center;color:#f87171;margin-top:15px;font-weight:bold"></div>
-  </div>
-
-  <div id="reviewView" style="display:none">
-    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
-    <div style="text-align:center;margin-bottom:30px">
-      <h2 style="margin:0;color:#fff;font-size:26px;">نتيجة الاختبار</h2>
-      <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:50px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;border:2px solid var(--gold-main);"></div>
-    </div>
-    <div id="reviewRenderBox" style="max-height:500px;overflow-y:auto;margin-bottom:25px;"></div>
-    <button type="button" class="btn" onclick="loadDashboard()">العودة إلى اللوحة الرئيسية</button>
-  </div>
-</div>
-
-<script src="config.js"></script>
-<script>
-const cfg = window.YALYN_CONFIG || {};
-let currentStudent = null;
-let activeExamQuestions = [];
-let studentCompletedExamIds = new Set();
-let globalStudentResults = [];
-
-const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
-
-async function studentLogin() {
-  const code = document.getElementById('studentCode').value.trim();
-  const err = document.getElementById('loginError');
-  err.textContent = "Checking Credentials...";
-  if(!code) { err.textContent = "Please enter your code"; return; }
-  try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getStudentData", code })
-    });
-    const data = await res.json();
-    if(data.success && data.student) {
-      currentStudent = data.student; err.textContent = ""; loadDashboard();
-    } else {
-      err.textContent = "Invalid Student Code!";
-    }
-  } catch(e) { err.textContent = "Server Connection Error."; }
-}
-
-async function loadDashboard() {
-  document.getElementById('loginView').style.display = 'none';
-  document.getElementById('examView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('dashboardView').style.display = 'block';
-
-  document.getElementById('dashStudentName').textContent = `مرحباً، ${currentStudent.name}`;
-  document.getElementById('dashStudentGrade').textContent = `الصف: ${currentStudent.grade}`;
-
-  const examsBox = document.getElementById('examsListContainer');
-  const historyBox = document.getElementById('historyListContainer');
-  examsBox.innerHTML = "<div style='color:var(--gold-main);text-align:center;'>جاري التحميل...</div>";
-  historyBox.innerHTML = "";
-
-  try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade || "", studentName: currentStudent.name || "" })
-    });
-    const data = await res.json();
-    studentCompletedExamIds.clear();
-    globalStudentResults = data.results || [];
-    
-    if(globalStudentResults.length > 0) {
-      globalStudentResults.forEach((r, idx) => {
-        studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
-        const reviewBtn = r.reviewData ? `<button class="btn" onclick="openPastReview(${idx})" style="padding:6px 12px;font-size:13px;">👁️ مراجعة</button>` : '';
-        historyBox.innerHTML += `
-          <div class="exam-item">
-            <div style="display:flex;align-items:center;gap:15px;">
-               <span class="pill" style="direction:ltr;">${r.score}</span>
-               ${reviewBtn}
-            </div>
-            <div style="text-align:left">
-              <b style="font-size:16px;">${r.examTitle}</b>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:5px">${r.date}</div>
-            </div>
-          </div>
-        `;
-      });
-    } else {
-      historyBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;'>لا توجد درجات سابقة.</div>";
-    }
-
-    if(data.exams && data.exams.length > 0) {
-      examsBox.innerHTML = "";
-      data.exams.forEach(ex => {
-        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase());
-        examsBox.innerHTML += `
-          <div class="exam-item">
-            ${isDone ? `<span class="pill-gray">مكتمل ✓</span>` : `<button class="btn" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`}
-            <div style="text-align:left"><b style="font-size:17px;color:var(--gold-light)">${ex.examTitle}</b></div>
-          </div>
-        `;
-      });
-    } else {
-      examsBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#f87171;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
-    }
-  } catch(e) { examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>"; }
-}
-
-async function startExam(examId, encodedTitle) {
-  const examTitle = decodeURIComponent(encodedTitle);
-  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
-
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'block';
-  document.getElementById('currentExamTitle').textContent = examTitle;
-  document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:18px;'>جاري التجهيز...</div>";
-
-  try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade })
-    });
-    const data = await res.json();
-    activeExamQuestions = data.questions || [];
-    if (activeExamQuestions.length === 0) throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
-    document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} Questions`;
-    
-    const box = document.getElementById('questionsRenderBox');
-    box.innerHTML = "";
-
-    activeExamQuestions.forEach((q, idx) => {
-      const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
-      const isMcq = c1 !== "";
-      
-      let rawUrl = toStr(q.image).replace(/['"]/g, '').trim();
-      let finalImgUrl = "";
-
-      if (rawUrl) {
-        let fileId = "";
-        if (rawUrl.includes('/d/')) {
-          const parts = rawUrl.split('/d/');
-          if (parts[1]) fileId = parts[1].split('/')[0];
-        } else if (rawUrl.includes('id=')) {
-          const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
-          fileId = urlParams.get('id');
-        }
-
-        if (fileId) {
-          // استخدام واجهة الصور المصغرة الرسمية لجوجل درايف (Thumbnail API) لعرض الصورة بوضوح تام ودون حظر
-          finalImgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-        } else {
-          finalImgUrl = rawUrl;
-        }
-      }
-
-      const imageHtml = finalImgUrl ? `<div style="text-align:center;"><img src="${finalImgUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x200?text=Image+Load+Error';"></div>` : "";
-      const questionText = toStr(q.question) !== "" ? `<div style="font-size:18px;font-weight:800;margin-bottom:18px;color:#fff;"><span style="color:var(--gold-main);">${idx + 1}.</span> ${toStr(q.question)}</div>` : "";
-
-      box.innerHTML += `
-        <div class="q-card">
-          ${questionText}
-          ${imageHtml}
-          ${isMcq ? `
-            <div>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c2}"> <span>${c2}</span></label>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c3}"> <span>${c3}</span></label>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c4}"> <span>${c4}</span></label>
-            </div>
-          ` : `
-            <input type="text" id="complete_ans_${idx}" style="width:100%;background:#000;border:2px solid rgba(251,191,36,0.5);border-radius:12px;padding:15px;color:#fde047;font-size:16px;font-weight:bold;direction:ltr;" placeholder="Type answer here...">
-          `}
+    <!-- Navbar -->
+    <header class="bg-indigo-700 text-white p-4 shadow-lg flex justify-between items-center">
+        <h1 class="text-xl font-bold">YALYN Academy 🎓</h1>
+        <div id="userInfo" class="hidden flex items-center space-x-3 space-x-reverse">
+            <span id="studentNameDisplay" class="font-semibold"></span>
+            <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1 rounded-md transition">خروج</button>
         </div>
-      `;
-    });
-  } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:25px;border-radius:15px;'>${e.message}</div>`; }
-}
+    </header>
 
-async function submitExam() {
-  let score = 0; const reviewList = [];
-  activeExamQuestions.forEach((q, idx) => {
-    let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
-    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } 
-    else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
-    const isCorrect = studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase();
-    if(isCorrect) score++;
-    reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
-  });
+    <main class="container mx-auto p-4 flex-grow max-w-3xl">
 
-  const finishBtn = document.getElementById('finishExamBtn');
-  finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
-  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
-  const finalScoreString = `${score} / ${totalQuestions}`;
-  const examTitle = document.getElementById('currentExamTitle').textContent;
-  const reviewDataStr = JSON.stringify(reviewList);
+        <!-- 1. تسجيل الدخول -->
+        <div id="loginSection" class="bg-white p-6 rounded-xl shadow-md mt-10">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">تسجيل دخول الطالب</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">كود الطالب الخاص بك</label>
+                    <input type="text" id="studentCodeInput" placeholder="أدخل الكود الخاص بك" class="w-full border border-gray-300 p-3 rounded-lg text-center font-bold tracking-widest text-lg focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+                <button onclick="loginStudent()" id="loginBtn" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">دخول المنصة</button>
+                <p id="loginError" class="text-red-500 text-center text-sm hidden"></p>
+            </div>
+        </div>
 
-  try {
-    await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr })
-    });
-    studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
-    renderReviewScreen(reviewList, finalScoreString);
-  } catch(e) { 
-    document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; 
-    finishBtn.disabled = false; 
-  }
-}
+        <!-- 2. لوحة تحكم الطالب -->
+        <div id="dashboardSection" class="hidden space-y-6">
+            <div class="bg-indigo-50 border border-indigo-200 p-4 rounded-xl flex justify-between items-center">
+                <div>
+                    <h3 class="font-bold text-gray-800 text-lg" id="dashName"></h3>
+                    <p class="text-sm text-gray-600" id="dashGrade"></p>
+                </div>
+            </div>
 
-function openPastReview(idx) {
-  const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
-  let parsedReview = []; try { parsedReview = JSON.parse(r.reviewData); } catch(e) { alert("تعذر تحميل المراجعة."); return; }
-  renderReviewScreen(parsedReview, r.score);
-}
+            <!-- الامتحانات المتاحة -->
+            <div class="bg-white p-5 rounded-xl shadow-md">
+                <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">الامتحانات المتاحة للصف الدراسي</h3>
+                <div id="examsList" class="space-y-3"></div>
+            </div>
 
-function renderReviewScreen(reviewList, scoreStr) {
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'block';
-  document.getElementById('finalScoreBadge').textContent = scoreStr;
-  const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
-  reviewList.forEach((item, i) => {
-    reviewBox.innerHTML += `
-      <div style="border-radius:18px;padding:20px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:ltr;text-align:left;border-left:5px solid ${item.isCorrect ? '#22c55e' : '#ef4444'};">
-        <div style="font-weight:bold;color:#fff;font-size:16px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</div>
-        <div style="font-size:15px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">Your Answer: <span style="color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span></div>
-        ${!item.isCorrect ? `<div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px;border-radius:8px;">Correct Answer: <b>${item.correctAns}</b></div>` : ''}
-      </div>
-    `;
-  });
-}
+            <!-- النتائج السابقة -->
+            <div class="bg-white p-5 rounded-xl shadow-md">
+                <h3 class="font-bold text-lg text-gray-800 mb-4 border-b pb-2">سجل درجاتك السابقة</h3>
+                <div id="resultsList" class="space-y-3"></div>
+            </div>
+        </div>
 
-function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }
-</script>
+        <!-- 3. شاشة خوض الامتحان -->
+        <div id="examSection" class="hidden bg-white p-6 rounded-xl shadow-md">
+            <div class="flex justify-between items-center border-b pb-3 mb-4">
+                <h2 id="examTitleHead" class="font-bold text-xl text-indigo-700"></h2>
+                <span id="questionCounter" class="bg-indigo-100 text-indigo-800 text-xs px-3 py-1 rounded-full font-bold"></span>
+            </div>
+
+            <div id="questionContainer" class="space-y-4">
+                <p id="qText" class="text-lg font-semibold text-gray-800"></p>
+                <div id="qImageContainer" class="hidden text-center my-3">
+                    <img id="qImage" src="" alt="صورة السؤال" class="max-h-64 mx-auto rounded-lg shadow-sm border">
+                </div>
+
+                <div id="optionsContainer" class="space-y-2"></div>
+            </div>
+
+            <div class="flex justify-between items-center mt-6 pt-4 border-t">
+                <button onclick="prevQuestion()" id="prevBtn" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-bold disabled:opacity-50">السابق</button>
+                <button onclick="nextQuestion()" id="nextBtn" class="bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-indigo-700">التالي</button>
+                <button onclick="submitExam()" id="submitBtn" class="hidden bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700">إنهاء وتسليم</button>
+            </div>
+        </div>
+
+        <!-- 4. شاشة المراجعة بعد التسليم -->
+        <div id="reviewSection" class="hidden bg-white p-6 rounded-xl shadow-md space-y-4">
+            <div class="text-center border-b pb-4">
+                <h2 class="text-2xl font-bold text-gray-800">نتيجة الامتحان</h2>
+                <div id="finalScoreDisplay" class="text-3xl font-extrabold text-indigo-600 my-2"></div>
+                <p class="text-sm text-gray-500">تم تسجيل نتيجتك بنجاح في النظام.</p>
+            </div>
+            <div id="reviewList" class="space-y-4"></div>
+            <button onclick="showDashboard()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-bold hover:bg-indigo-700 transition">العودة للوحة الرئيسية</button>
+        </div>
+
+    </main>
+
+    <script>
+        // ضع رابط الـ Web App الخاص بـ Apps Script هنا
+        const API_URL = "YOUR_EXACT_APPS_SCRIPT_WEB_APP_URL_HERE";
+
+        let currentStudent = null;
+        let currentQuestions = [];
+        let currentExamTitle = "";
+        let currentQIndex = 0;
+        let userAnswers = {};
+
+        function formatDriveImage(url) {
+            if (!url) return '';
+            const match = url.match(/(?:id=|\/d\/|src=)([\w-]+)/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800`;
+            }
+            return url;
+        }
+
+        async function loginStudent() {
+            const code = document.getElementById('studentCodeInput').value.trim();
+            const btn = document.getElementById('loginBtn');
+            const err = document.getElementById('loginError');
+            if(!code) return alert("يرجى إدخال كود الطالب");
+
+            btn.disabled = true;
+            btn.innerText = "جاري التحقق...";
+            err.classList.add('hidden');
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "getStudentData", code: code })
+                });
+                const data = await res.json();
+                
+                if(data.success && data.student) {
+                    currentStudent = data.student;
+                    document.getElementById('loginSection').classList.add('hidden');
+                    document.getElementById('userInfo').classList.remove('hidden');
+                    document.getElementById('studentNameDisplay').innerText = currentStudent.name;
+                    loadDashboard();
+                } else {
+                    err.innerText = "الكود غير صحيح، يرجى التأكد منه والتحقق مجدداً";
+                    err.classList.remove('hidden');
+                }
+            } catch(e) {
+                alert("حدث خطأ أثناء الاتصال بالنظام: " + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "دخول المنصة";
+            }
+        }
+
+        async function loadDashboard() {
+            document.getElementById('dashName').innerText = currentStudent.name;
+            document.getElementById('dashGrade').innerText = "الصف الدراسي: " + currentStudent.grade;
+            document.getElementById('dashboardSection').classList.remove('hidden');
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade, studentName: currentStudent.name })
+            });
+            const data = await res.json();
+
+            // عرض الامتحانات
+            const examsDiv = document.getElementById('examsList');
+            examsDiv.innerHTML = "";
+            if(data.exams && data.exams.length > 0) {
+                data.exams.forEach(ex => {
+                    examsDiv.innerHTML += `
+                        <div class="flex justify-between items-center p-3 border rounded-lg bg-gray-50">
+                            <span class="font-bold text-gray-700">${ex.examTitle}</span>
+                            <button onclick="startExam('${ex.examTitle}')" class="bg-indigo-600 text-white text-sm px-4 py-1.5 rounded-lg font-bold hover:bg-indigo-700">بدء الامتحان</button>
+                        </div>
+                    `;
+                });
+            } else {
+                examsDiv.innerHTML = `<p class="text-gray-500 text-sm">لا توجد امتحانات متاحة لصفك حالياً.</p>`;
+            }
+
+            // عرض النتائج
+            const resDiv = document.getElementById('resultsList');
+            resDiv.innerHTML = "";
+            if(data.results && data.results.length > 0) {
+                data.results.forEach(r => {
+                    resDiv.innerHTML += `
+                        <div class="flex justify-between items-center p-3 border rounded-lg">
+                            <div>
+                                <p class="font-bold text-gray-800">${r.examTitle}</p>
+                                <p class="text-xs text-gray-500">${r.date}</p>
+                            </div>
+                            <span class="font-extrabold text-indigo-600 text-lg">${r.score}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                resDiv.innerHTML = `<p class="text-gray-500 text-sm">لم تقم بأداء أي امتحانات بعد.</p>`;
+            }
+        }
+
+        async function startExam(title) {
+            currentExamTitle = title;
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('examSection').classList.remove('hidden');
+            document.getElementById('examTitleHead').innerText = title;
+
+            const res = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "getExamQuestions", examTitle: title })
+            });
+            const data = await res.json();
+            currentQuestions = data.questions || [];
+            currentQIndex = 0;
+            userAnswers = {};
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = currentQuestions[currentQIndex];
+            document.getElementById('questionCounter').innerText = `سؤال ${currentQIndex + 1} من ${currentQuestions.length}`;
+            document.getElementById('qText').innerText = q.question;
+
+            // الصورة
+            const imgEl = document.getElementById('qImage');
+            const imgBox = document.getElementById('qImageContainer');
+            if(q.image) {
+                imgEl.src = formatDriveImage(q.image);
+                imgBox.classList.remove('hidden');
+            } else {
+                imgBox.classList.add('hidden');
+            }
+
+            // الخيارات
+            const optsBox = document.getElementById('optionsContainer');
+            optsBox.innerHTML = "";
+
+            // التحقق مما إذا كان السؤال اختياري أم مقالي
+            const choices = [q.choice1, q.choice2, q.choice3, q.choice4].filter(c => String(c).trim() !== "");
+
+            if(choices.length > 0) {
+                choices.forEach(opt => {
+                    const isSelected = userAnswers[currentQIndex] === opt;
+                    optsBox.innerHTML += `
+                        <label class="flex items-center p-3 border rounded-lg cursor-pointer transition ${isSelected ? 'bg-indigo-50 border-indigo-500' : 'hover:bg-gray-50'}">
+                            <input type="radio" name="opt" value="${opt}" ${isSelected ? 'checked' : ''} onchange="selectOption('${opt}')" class="ml-3">
+                            <span class="text-gray-800 font-medium">${opt}</span>
+                        </label>
+                    `;
+                });
+            } else {
+                // سؤال مقالي
+                optsBox.innerHTML = `
+                    <textarea oninput="selectOption(this.value)" placeholder="اكتب إجابتك هنا..." class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none">${userAnswers[currentQIndex] || ''}</textarea>
+                `;
+            }
+
+            // الأزرار
+            document.getElementById('prevBtn').disabled = (currentQIndex === 0);
+            if(currentQIndex === currentQuestions.length - 1) {
+                document.getElementById('nextBtn').classList.add('hidden');
+                document.getElementById('submitBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextBtn').classList.remove('hidden');
+                document.getElementById('submitBtn').classList.add('hidden');
+            }
+        }
+
+        function selectOption(val) { userAnswers[currentQIndex] = val; }
+        function nextQuestion() { if(currentQIndex < currentQuestions.length - 1) { currentQIndex++; renderQuestion(); } }
+        function prevQuestion() { if(currentQIndex > 0) { currentQIndex--; renderQuestion(); } }
+
+        async function submitExam() {
+            if(!confirm("هل أنت تأكد من تسليم الامتحان؟")) return;
+
+            let scoreCount = 0;
+            let reviewArr = [];
+
+            currentQuestions.forEach((q, idx) => {
+                const uAns = userAnswers[idx] || "بدون إجابة";
+                const cAns = q.correctAnswer;
+                const isCorrect = String(uAns).trim().toLowerCase() === String(cAns).trim().toLowerCase();
+                if(isCorrect) scoreCount++;
+
+                reviewArr.push({
+                    question: q.question,
+                    studentAns: uAns,
+                    correctAns: cAns,
+                    isCorrect: isCorrect
+                });
+            });
+
+            const finalScoreStr = `${scoreCount} / ${currentQuestions.length}`;
+            const dateStr = new Date().toLocaleDateString('ar-EG');
+
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: "saveStudentResult",
+                    studentName: currentStudent.name,
+                    grade: currentStudent.grade,
+                    examTitle: currentExamTitle,
+                    score: finalScoreStr,
+                    date: dateStr,
+                    reviewData: JSON.stringify(reviewArr)
+                })
+            });
+
+            // عرض شاشة المراجعة
+            document.getElementById('examSection').classList.add('hidden');
+            document.getElementById('reviewSection').classList.remove('hidden');
+            document.getElementById('finalScoreDisplay').innerText = finalScoreStr;
+
+            const revBox = document.getElementById('reviewList');
+            revBox.innerHTML = "";
+            reviewArr.forEach((item, i) => {
+                revBox.innerHTML += `
+                    <div class="p-4 border rounded-lg ${item.isCorrect ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}">
+                        <p class="font-bold text-gray-800">${i+1}. ${item.question}</p>
+                        <p class="text-sm mt-1">إجابتك: <span class="${item.isCorrect ? 'text-green-700' : 'text-red-700'} font-bold">${item.studentAns}</span></p>
+                        ${!item.isCorrect ? `<p class="text-sm text-gray-600">الإجابة الصحيحة: <span class="font-bold text-green-700">${item.correctAns}</span></p>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function showDashboard() {
+            document.getElementById('reviewSection').classList.add('hidden');
+            loadDashboard();
+        }
+
+        function logout() {
+            currentStudent = null;
+            document.getElementById('dashboardSection').classList.add('hidden');
+            document.getElementById('examSection').classList.add('hidden');
+            document.getElementById('reviewSection').classList.add('hidden');
+            document.getElementById('userInfo').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('studentCodeInput').value = "";
+        }
+    </script>
 </body>
 </html>
