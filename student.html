@@ -6,102 +6,106 @@
 <title>YALYN Academy - Student Portal</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg-dark: #0a0a0a;
-    --gold-light: #fde047;
-    --gold-main: #fbbf24;
-    --gold-dark: #b45309;
-    --text-main: #ffffff;
-    --text-muted: #9ca3af;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; color: var(--text-main); font-family: 'Inter', sans-serif;
-    background: radial-gradient(circle at 50% 0%, #2a1f00 0%, var(--bg-dark) 50%, #000000 100%);
-    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
-  }
-  .app-card {
-    width: min(750px, 100%);
-    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-    border: 1px solid rgba(251, 191, 36, 0.15);
-    border-radius: 30px; padding: 40px;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-  }
-  .brand-title {
-    font-size: 50px; margin: 0; font-weight: 900; text-align: center;
-    background: linear-gradient(to bottom, #fff7d6, #fbb034, #b45309);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .brand-subtitle { font-size: 20px; font-weight: 800; color: #fff; text-align: center; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
-  .input-wrapper { position: relative; margin-bottom: 25px; }
-  .field { width: 100%; background: #000; border: 2px solid var(--gold-main); border-radius: 50px; padding: 18px 20px; color: white; outline: 0; font-size: 16px; font-weight: 600; text-align: center; }
-  .btn-login { width: 100%; padding: 16px; border-radius: 50px; border: 2px solid #fff; background: linear-gradient(to bottom, #fde047, #f59e0b); color: #000; font-weight: 900; font-size: 20px; cursor: pointer; transition: 0.3s; }
-  .btn-login:hover { transform: translateY(-3px); filter: brightness(1.1); }
-  .exam-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(251, 191, 36, 0.2); padding: 18px 22px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
-  .pill { background: rgba(251, 191, 36, 0.15); color: var(--gold-light); padding: 6px 14px; border-radius: 99px; font-size: 15px; font-weight: 800; border: 1px solid var(--gold-main); }
-  .pill-gray { background: #222; color: #777; padding: 6px 14px; border-radius: 99px; font-size: 13px; border: 1px solid #444; }
-  .btn { border: 1px solid var(--gold-main); color: #000; padding: 10px 20px; border-radius: 12px; background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer; font-size: 15px; }
-  .q-card { background: linear-gradient(145deg, #1f1f1f, #0d0d0d); border: 1px solid var(--gold-main); border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left; }
-  .choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
-  .choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
+  :root {
+    --bg-dark: #0a0a0a;
+    --gold-light: #fde047;
+    --gold-main: #fbbf24;
+    --gold-dark: #b45309;
+    --text-main: #ffffff;
+    --text-muted: #9ca3af;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; color: var(--text-main); font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at 50% 0%, #2a1f00 0%, var(--bg-dark) 50%, #000000 100%);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .app-card {
+    width: min(750px, 100%);
+    background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
+    border: 1px solid rgba(251, 191, 36, 0.15);
+    border-radius: 30px; padding: 40px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+  }
+  .brand-title {
+    font-size: 50px; margin: 0; font-weight: 900; text-align: center;
+    background: linear-gradient(to bottom, #fff7d6, #fbb034, #b45309);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .brand-subtitle { font-size: 20px; font-weight: 800; color: #fff; text-align: center; letter-spacing: 6px; text-transform: uppercase; margin-bottom: 30px; }
+  .input-wrapper { position: relative; margin-bottom: 25px; }
+  .field { width: 100%; background: #000; border: 2px solid var(--gold-main); border-radius: 50px; padding: 18px 20px; color: white; outline: 0; font-size: 16px; font-weight: 600; text-align: center; }
+  .btn-login { width: 100%; padding: 16px; border-radius: 50px; border: 2px solid #fff; background: linear-gradient(to bottom, #fde047, #f59e0b); color: #000; font-weight: 900; font-size: 20px; cursor: pointer; transition: 0.3s; }
+  .btn-login:hover { transform: translateY(-3px); filter: brightness(1.1); }
+  .exam-item { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(251, 191, 36, 0.2); padding: 18px 22px; border-radius: 16px; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+  .pill { background: rgba(251, 191, 36, 0.15); color: var(--gold-light); padding: 6px 14px; border-radius: 99px; font-size: 15px; font-weight: 800; border: 1px solid var(--gold-main); }
+  .pill-gray { background: #222; color: #777; padding: 6px 14px; border-radius: 99px; font-size: 13px; border: 1px solid #444; }
+  .btn { border: 1px solid var(--gold-main); color: #000; padding: 10px 20px; border-radius: 12px; background: linear-gradient(135deg, #fde047, #f59e0b); font-weight: 800; cursor: pointer; font-size: 15px; }
+  .q-card { background: linear-gradient(145deg, #1f1f1f, #0d0d0d); border: 1px solid var(--gold-main); border-radius: 20px; padding: 25px; margin-bottom: 22px; direction: ltr; text-align: left; }
+  .choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
+  .choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
 </style>
 </head>
 <body>
 
 <div class="app-card" id="app">
-  <div id="loginView">
-    <div class="brand-title" dir="ltr">YALYAN</div>
-    <div class="brand-subtitle" dir="ltr">ACADEMY</div>
-    <div class="input-wrapper" dir="ltr">
-      <input type="password" id="studentCode" class="field" placeholder="Enter Your Student Code">
-    </div>
-    <button class="btn-login" onclick="studentLogin()">Login ➔</button>
-    <div id="loginError" style="color:#f87171;font-size:15px;text-align:center;margin-top:15px;font-weight:600;"></div>
-    <div style="margin-top:40px; border:2px solid var(--gold-main); border-radius:15px; padding:15px; background:#000; text-align:center;">
-      <div style="color:var(--gold-main); font-size:14px; font-weight:bold;">Made By :</div>
-      <div style="font-weight:800; font-size:18px; color:#fff; margin:5px 0;">Mr. Mohamed Abdulfatah</div>
-    </div>
-  </div>
+  <!-- واجهة تسجيل الدخول -->
+  <div id="loginView">
+    <div class="brand-title" dir="ltr">YALYAN</div>
+    <div class="brand-subtitle" dir="ltr">ACADEMY</div>
+    <div class="input-wrapper" dir="ltr">
+      <input type="password" id="studentCode" class="field" placeholder="Enter Your Student Code">
+    </div>
+    <button class="btn-login" onclick="studentLogin()">Login ➔</button>
+    <div id="loginError" style="color:#f87171;font-size:15px;text-align:center;margin-top:15px;font-weight:600;"></div>
+    <div style="margin-top:40px; border:2px solid var(--gold-main); border-radius:15px; padding:15px; background:#000; text-align:center;">
+      <div style="color:var(--gold-main); font-size:14px; font-weight:bold;">Made By :</div>
+      <div style="font-weight:800; font-size:18px; color:#fff; margin:5px 0;">Mr. Mohamed Abdulfatah</div>
+    </div>
+  </div>
 
-  <div id="dashboardView" style="display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:#000;padding:15px 20px;border-radius:18px;border:1px solid rgba(251,191,36,0.2);">
-      <div>
-        <h2 id="dashStudentName" style="margin:0;color:#fff;font-size:20px;"></h2>
-        <span id="dashStudentGrade" style="color:var(--gold-main);font-size:14px;font-weight:600;"></span>
-      </div>
-      <button onclick="logout()" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:bold;">خروج</button>
-    </div>
-    <h3 style="font-size:18px;color:var(--text-main);margin:25px 0 15px;">📜 الامتحانات المتاحة:</h3>
-    <div id="examsListContainer"></div>
-    <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
-    <div id="historyListContainer"></div>
-  </div>
+  <!-- لوحة تحكم الطالب -->
+  <div id="dashboardView" style="display:none">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;background:#000;padding:15px 20px;border-radius:18px;border:1px solid rgba(251,191,36,0.2);">
+      <div>
+        <h2 id="dashStudentName" style="margin:0;color:#fff;font-size:20px;"></h2>
+        <span id="dashStudentGrade" style="color:var(--gold-main);font-size:14px;font-weight:600;"></span>
+      </div>
+      <button onclick="logout()" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 16px;border-radius:10px;cursor:pointer;font-weight:bold;">خروج</button>
+    </div>
+    <h3 style="font-size:18px;color:var(--text-main);margin:25px 0 15px;">📜 الامتحانات المتاحة:</h3>
+    <div id="examsListContainer"></div>
+    <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
+    <div id="historyListContainer"></div>
+  </div>
 
-  <div id="examView" style="display:none">
-    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
-      <h3 id="currentExamTitle" style="margin:0;color:#fff;font-size:20px;"></h3>
-      <span class="pill" id="questionCountBadge"></span>
-    </div>
-    <div id="questionsRenderBox"></div>
-    <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">إنهاء الامتحان (Finish)</button>
-    <div id="examStatusMsg" style="text-align:center;color:#f87171;margin-top:15px;font-weight:bold"></div>
-  </div>
+  <!-- واجهة الامتحان -->
+  <div id="examView" style="display:none">
+    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <h3 id="currentExamTitle" style="margin:0;color:#fff;font-size:20px;"></h3>
+      <span class="pill" id="questionCountBadge"></span>
+    </div>
+    <div id="questionsRenderBox"></div>
+    <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">إنهاء الامتحان (Finish)</button>
+    <div id="examStatusMsg" style="text-align:center;color:#f87171;margin-top:15px;font-weight:bold"></div>
+  </div>
 
-  <div id="reviewView" style="display:none">
-    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
-    <div style="text-align:center;margin-bottom:30px">
-      <h2 style="margin:0;color:#fff;font-size:26px;">نتيجة الاختبار</h2>
-      <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:50px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;border:2px solid var(--gold-main);"></div>
-    </div>
-    <div id="reviewRenderBox" style="max-height:500px;overflow-y:auto;margin-bottom:25px;"></div>
-    <button type="button" class="btn" onclick="loadDashboard()">العودة إلى اللوحة الرئيسية</button>
-  </div>
+  <!-- واجهة النتيجة والمراجعة -->
+  <div id="reviewView" style="display:none">
+    <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
+    <div style="text-align:center;margin-bottom:30px">
+      <h2 style="margin:0;color:#fff;font-size:26px;">نتيجة الاختبار</h2>
+      <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:50px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;border:2px solid var(--gold-main);"></div>
+    </div>
+    <div id="reviewRenderBox" style="max-height:500px;overflow-y:auto;margin-bottom:25px;"></div>
+    <button type="button" class="btn" onclick="loadDashboard()" style="width:100%">العودة إلى اللوحة الرئيسية</button>
+  </div>
 </div>
 
 <script src="config.js"></script>
 <script>
-const cfg = window.YALYN_CONFIG || {};
+const cfg = window.YALYN_CONFIG || { webAppUrl: "رابط_تطبيق_جوجل_هنا" }; 
 let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
@@ -110,208 +114,207 @@ let globalStudentResults = [];
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
 async function studentLogin() {
-  const code = document.getElementById('studentCode').value.trim();
-  const err = document.getElementById('loginError');
-  err.textContent = "Checking Credentials...";
-  if(!code) { err.textContent = "Please enter your code"; return; }
-  try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getStudentData", code })
-    });
-    const data = await res.json();
-    if(data.success && data.student) {
-      currentStudent = data.student; err.textContent = ""; loadDashboard();
-    } else {
-      err.textContent = "Invalid Student Code!";
-    }
-  } catch(e) { err.textContent = "Server Connection Error."; }
+  const code = document.getElementById('studentCode').value.trim();
+  const err = document.getElementById('loginError');
+  err.textContent = "Checking Credentials...";
+  if(!code) { err.textContent = "Please enter your code"; return; }
+  try {
+    const res = await fetch(cfg.webAppUrl, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getStudentData", code })
+    });
+    const data = await res.json();
+    if(data.success && data.student) {
+      currentStudent = data.student; err.textContent = ""; loadDashboard();
+    } else {
+      err.textContent = "Invalid Student Code!";
+    }
+  } catch(e) { err.textContent = "Server Connection Error."; }
 }
 
 async function loadDashboard() {
-  document.getElementById('loginView').style.display = 'none';
-  document.getElementById('examView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'none';
-  document.getElementById('dashboardView').style.display = 'block';
+  document.getElementById('loginView').style.display = 'none';
+  document.getElementById('examView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'none';
+  document.getElementById('dashboardView').style.display = 'block';
 
-  document.getElementById('dashStudentName').textContent = `مرحباً، ${currentStudent.name}`;
-  document.getElementById('dashStudentGrade').textContent = `الصف: ${currentStudent.grade}`;
+  document.getElementById('dashStudentName').textContent = `مرحباً، ${currentStudent.name}`;
+  document.getElementById('dashStudentGrade').textContent = `الصف: ${currentStudent.grade}`;
 
-  const examsBox = document.getElementById('examsListContainer');
-  const historyBox = document.getElementById('historyListContainer');
-  examsBox.innerHTML = "<div style='color:var(--gold-main);text-align:center;'>جاري التحميل...</div>";
-  historyBox.innerHTML = "";
+  const examsBox = document.getElementById('examsListContainer');
+  const historyBox = document.getElementById('historyListContainer');
+  examsBox.innerHTML = "<div style='color:var(--gold-main);text-align:center;'>جاري التحميل...</div>";
+  historyBox.innerHTML = "";
 
-  try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade || "", studentName: currentStudent.name || "" })
-    });
-    const data = await res.json();
-    studentCompletedExamIds.clear();
-    globalStudentResults = data.results || [];
-    
-    if(globalStudentResults.length > 0) {
-      globalStudentResults.forEach((r, idx) => {
-        studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
-        const reviewBtn = r.reviewData ? `<button class="btn" onclick="openPastReview(${idx})" style="padding:6px 12px;font-size:13px;">👁️ مراجعة</button>` : '';
-        historyBox.innerHTML += `
-          <div class="exam-item">
-            <div style="display:flex;align-items:center;gap:15px;">
-               <span class="pill" style="direction:ltr;">${r.score}</span>
-               ${reviewBtn}
-            </div>
-            <div style="text-align:left">
-              <b style="font-size:16px;">${r.examTitle}</b>
-              <div style="font-size:12px;color:var(--text-muted);margin-top:5px">${r.date}</div>
-            </div>
-          </div>
-        `;
-      });
-    } else {
-      historyBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;'>لا توجد درجات سابقة.</div>";
-    }
+  try {
+    const res = await fetch(cfg.webAppUrl, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getStudentDashboardData", grade: currentStudent.grade || "", studentName: currentStudent.name || "" })
+    });
+    const data = await res.json();
+    studentCompletedExamIds.clear();
+    globalStudentResults = data.results || [];
+    
+    if(globalStudentResults.length > 0) {
+      globalStudentResults.forEach((r, idx) => {
+        studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
+        const reviewBtn = r.reviewData ? `<button class="btn" onclick="openPastReview(${idx})" style="padding:6px 12px;font-size:13px;">👁️ مراجعة</button>` : '';
+        historyBox.innerHTML += `
+          <div class="exam-item">
+            <div style="display:flex;align-items:center;gap:15px;">
+               <span class="pill" style="direction:ltr;">${r.score}</span>
+               ${reviewBtn}
+            </div>
+            <div style="text-align:left">
+              <b style="font-size:16px;">${r.examTitle}</b>
+              <div style="font-size:12px;color:var(--text-muted);margin-top:5px">${r.date}</div>
+            </div>
+          </div>
+        `;
+      });
+    } else {
+      historyBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;'>لا توجد درجات سابقة.</div>";
+    }
 
-    if(data.exams && data.exams.length > 0) {
-      examsBox.innerHTML = "";
-      data.exams.forEach(ex => {
-        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase());
-        examsBox.innerHTML += `
-          <div class="exam-item">
-            ${isDone ? `<span class="pill-gray">مكتمل ✓</span>` : `<button class="btn" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`}
-            <div style="text-align:left"><b style="font-size:17px;color:var(--gold-light)">${ex.examTitle}</b></div>
-          </div>
-        `;
-      });
-    } else {
-      examsBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#f87171;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
-    }
-  } catch(e) { examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>"; }
+    if(data.exams && data.exams.length > 0) {
+      examsBox.innerHTML = "";
+      data.exams.forEach(ex => {
+        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase());
+        examsBox.innerHTML += `
+          <div class="exam-item">
+            ${isDone ? `<span class="pill-gray">مكتمل ✓</span>` : `<button class="btn" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`}
+            <div style="text-align:left"><b style="font-size:17px;color:var(--gold-light)">${ex.examTitle}</b></div>
+          </div>
+        `;
+      });
+    } else {
+      examsBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#f87171;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
+    }
+  } catch(e) { examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>"; }
 }
 
 async function startExam(examId, encodedTitle) {
-  const examTitle = decodeURIComponent(encodedTitle);
-  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
+  const examTitle = decodeURIComponent(encodedTitle);
+  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
 
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'block';
-  document.getElementById('currentExamTitle').textContent = examTitle;
-  document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:18px;'>جاري التجهيز...</div>";
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('examView').style.display = 'block';
+  document.getElementById('currentExamTitle').textContent = examTitle;
+  document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:18px;'>جاري التجهيز...</div>";
 
-  try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade })
-    });
-    const data = await res.json();
-    activeExamQuestions = data.questions || [];
-    if (activeExamQuestions.length === 0) throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
-    document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} Questions`;
-    
-    const box = document.getElementById('questionsRenderBox');
-    box.innerHTML = "";
+  try {
+    const res = await fetch(cfg.webAppUrl, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade })
+    });
+    const data = await res.json();
+    activeExamQuestions = data.questions || [];
+    if (activeExamQuestions.length === 0) throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
+    document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} Questions`;
+    
+    const box = document.getElementById('questionsRenderBox');
+    box.innerHTML = "";
 
-    activeExamQuestions.forEach((q, idx) => {
-      const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
-      const isMcq = c1 !== "";
-      
-      let rawUrl = toStr(q.image).replace(/['"]/g, '').trim();
-      let finalImgUrl = "";
+    activeExamQuestions.forEach((q, idx) => {
+      const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
+      const isMcq = c1 !== "";
+      
+      let rawUrl = toStr(q.image).replace(/['"]/g, '').trim();
+      let finalImgUrl = "";
 
-      if (rawUrl) {
-        let fileId = "";
-        if (rawUrl.includes('/d/')) {
-          const parts = rawUrl.split('/d/');
-          if (parts[1]) fileId = parts[1].split('/')[0];
-        } else if (rawUrl.includes('id=')) {
-          const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
-          fileId = urlParams.get('id');
-        }
+      if (rawUrl) {
+        let fileId = "";
+        if (rawUrl.includes('/d/')) {
+          const parts = rawUrl.split('/d/');
+          if (parts[1]) fileId = parts[1].split('/')[0];
+        } else if (rawUrl.includes('id=')) {
+          const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
+          fileId = urlParams.get('id');
+        }
 
-        if (fileId) {
-          // استخدام واجهة الصور المصغرة الرسمية لجوجل درايف (Thumbnail API) لعرض الصورة بوضوح تام ودون حظر
-          finalImgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-        } else {
-          finalImgUrl = rawUrl;
-        }
-      }
+        if (fileId) {
+          finalImgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+        } else {
+          finalImgUrl = rawUrl;
+        }
+      }
 
-      const imageHtml = finalImgUrl ? `<div style="text-align:center;"><img src="${finalImgUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x200?text=Image+Load+Error';"></div>` : "";
-      const questionText = toStr(q.question) !== "" ? `<div style="font-size:18px;font-weight:800;margin-bottom:18px;color:#fff;"><span style="color:var(--gold-main);">${idx + 1}.</span> ${toStr(q.question)}</div>` : "";
+      const imageHtml = finalImgUrl ? `<div style="text-align:center;"><img src="${finalImgUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x200?text=Image+Load+Error';"></div>` : "";
+      const questionText = toStr(q.question) !== "" ? `<div style="font-size:18px;font-weight:800;margin-bottom:18px;color:#fff;"><span style="color:var(--gold-main);">${idx + 1}.</span> ${toStr(q.question)}</div>` : "";
 
-      box.innerHTML += `
-        <div class="q-card">
-          ${questionText}
-          ${imageHtml}
-          ${isMcq ? `
-            <div>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c2}"> <span>${c2}</span></label>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c3}"> <span>${c3}</span></label>
-              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c4}"> <span>${c4}</span></label>
-            </div>
-          ` : `
-            <input type="text" id="complete_ans_${idx}" style="width:100%;background:#000;border:2px solid rgba(251,191,36,0.5);border-radius:12px;padding:15px;color:#fde047;font-size:16px;font-weight:bold;direction:ltr;" placeholder="Type answer here...">
-          `}
-        </div>
-      `;
-    });
-  } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:25px;border-radius:15px;'>${e.message}</div>`; }
+      box.innerHTML += `
+        <div class="q-card">
+          ${questionText}
+          ${imageHtml}
+          ${isMcq ? `
+            <div>
+              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
+              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c2}"> <span>${c2}</span></label>
+              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c3}"> <span>${c3}</span></label>
+              <label class="choice-label"><input type="radio" name="q_${idx}" value="${c4}"> <span>${c4}</span></label>
+            </div>
+          ` : `
+            <input type="text" id="complete_ans_${idx}" style="width:100%;background:#000;border:2px solid rgba(251,191,36,0.5);border-radius:12px;padding:15px;color:#fde047;font-size:16px;font-weight:bold;direction:ltr;" placeholder="Type answer here...">
+          `}
+        </div>
+      `;
+    });
+  } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:25px;border-radius:15px;'>${e.message}</div>`; }
 }
 
 async function submitExam() {
-  let score = 0; const reviewList = [];
-  activeExamQuestions.forEach((q, idx) => {
-    let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
-    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } 
-    else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
-    const isCorrect = studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase();
-    if(isCorrect) score++;
-    reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
-  });
+  let score = 0; const reviewList = [];
+  activeExamQuestions.forEach((q, idx) => {
+    let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
+    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } 
+    else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
+    const isCorrect = studentAns.toLowerCase() === toStr(q.correctAnswer).toLowerCase();
+    if(isCorrect) score++;
+    reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
+  });
 
-  const finishBtn = document.getElementById('finishExamBtn');
-  finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
-  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
-  const finalScoreString = `${score} / ${totalQuestions}`;
-  const examTitle = document.getElementById('currentExamTitle').textContent;
-  const reviewDataStr = JSON.stringify(reviewList);
+  const finishBtn = document.getElementById('finishExamBtn');
+  finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
+  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
+  const finalScoreString = `${score} / ${totalQuestions}`;
+  const examTitle = document.getElementById('currentExamTitle').textContent;
+  const reviewDataStr = JSON.stringify(reviewList);
 
-  try {
-    await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr })
-    });
-    studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
-    renderReviewScreen(reviewList, finalScoreString);
-  } catch(e) { 
-    document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; 
-    finishBtn.disabled = false; 
-  }
+  try {
+    await fetch(cfg.webAppUrl, {
+      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr })
+    });
+    studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
+    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
+    renderReviewScreen(reviewList, finalScoreString);
+  } catch(e) { 
+    document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; 
+    finishBtn.disabled = false; 
+  }
 }
 
 function openPastReview(idx) {
-  const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
-  let parsedReview = []; try { parsedReview = JSON.parse(r.reviewData); } catch(e) { alert("تعذر تحميل المراجعة."); return; }
-  renderReviewScreen(parsedReview, r.score);
+  const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
+  let parsedReview = []; try { parsedReview = JSON.parse(r.reviewData); } catch(e) { alert("تعذر تحميل المراجعة."); return; }
+  renderReviewScreen(parsedReview, r.score);
 }
 
 function renderReviewScreen(reviewList, scoreStr) {
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'block';
-  document.getElementById('finalScoreBadge').textContent = scoreStr;
-  const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
-  reviewList.forEach((item, i) => {
-    reviewBox.innerHTML += `
-      <div style="border-radius:18px;padding:20px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:ltr;text-align:left;border-left:5px solid ${item.isCorrect ? '#22c55e' : '#ef4444'};">
-        <div style="font-weight:bold;color:#fff;font-size:16px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</div>
-        <div style="font-size:15px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">Your Answer: <span style="color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span></div>
-        ${!item.isCorrect ? `<div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px;border-radius:8px;">Correct Answer: <b>${item.correctAns}</b></div>` : ''}
-      </div>
-    `;
-  });
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('examView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'block';
+  document.getElementById('finalScoreBadge').textContent = scoreStr;
+  const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
+  reviewList.forEach((item, i) => {
+    reviewBox.innerHTML += `
+      <div style="border-radius:18px;padding:20px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:ltr;text-align:left;border-left:5px solid ${item.isCorrect ? '#22c55e' : '#ef4444'};">
+        <div style="font-weight:bold;color:#fff;font-size:16px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</div>
+        <div style="font-size:15px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">Your Answer: <span style="color:${item.isCorrect ? '#4ade80' : '#f87171'}">${item.studentAns}</span></div>
+        ${!item.isCorrect ? `<div style="font-size:15px;color:#4ade80;background:rgba(34,197,94,0.1);padding:10px;border-radius:8px;">Correct Answer: <b>${item.correctAns}</b></div>` : ''}
+      </div>
+    `;
+  });
 }
 
 function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }
