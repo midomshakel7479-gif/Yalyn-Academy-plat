@@ -52,7 +52,7 @@
   .unit-select-wrapper { margin: 20px 0; }
   .unit-select-wrapper select.field { text-align: right; border-radius: 14px; padding: 14px 18px; }
   
-  /* تحسين التمرير للجدول على الهواتف */
+  /* الحاوية التي تمنع خروج الجدول عن الإطار في الهواتف */
   .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; background: rgba(255,255,255,0.02); }
   .report-table { width: 100%; min-width: 320px; border-collapse: collapse; font-size: 13px; }
   .report-table th, .report-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
@@ -272,7 +272,8 @@ async function loadDashboard() {
 function parseScoreString(scoreStr) {
   if (!scoreStr) return null;
   const engScore = scoreStr.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-  const match = engScore.match(/(\d+(?:\.\d+)?)\s*(?:\/|\\|من)\s*(\d+(?:\.\d+)?)/);
+  // يدعم كافة الفواصل: / أو \ أو - أو "من"
+  const match = engScore.match(/(\d+(?:\.\d+)?)\s*(?:\/|\\|-|من)\s*(\d+(?:\.\d+)?)/);
   if (match) {
     return { obtained: parseFloat(match[1]), max: parseFloat(match[2]) };
   }
@@ -312,21 +313,33 @@ function renderMonthlyReport() {
     "5": ["مايو", "may"]
   };
   const searchTerms = monthNames[monthNum];
+  const targetMonth = parseInt(monthNum);
 
   let totalObtained = 0;
   let totalMax = 0;
   let foundAny = false;
   let htmlRows = "";
 
-  globalStudentResults.forEach(r => {
-    let match = false;
-    const engDate = r.date.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-    const dateParts = engDate.split('/');
-    if (dateParts.length >= 2 && parseInt(dateParts[1]) == parseInt(monthNum)) { match = true; }
-    const lowerExamName = (r.examTitle || "").toLowerCase();
-    if (searchTerms.some(term => lowerExamName.includes(term))) { match = true; }
+  // دالة ذكية لفحص التطابق مع الشهر (تبحث في الاسم وفي التاريخ بكل الصيغ)
+  const isMatch = (dateStr, titleStr) => {
+    const title = (titleStr || "").toLowerCase();
+    // 1. هل يحتوي اسم الامتحان على اسم الشهر أو رقمه؟
+    if (searchTerms.some(term => title.includes(term))) return true;
+    if (new RegExp(`\\b${targetMonth}\\b`).test(title)) return true;
 
-    if (match) {
+    // 2. هل يحتوي التاريخ على رقم الشهر؟
+    if (!dateStr) return false;
+    let engDate = dateStr.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
+    let nums = engDate.match(/\d+/g);
+    if (nums && nums.length >= 2) {
+      if (parseInt(nums[0]) === targetMonth || parseInt(nums[1]) === targetMonth) return true;
+    }
+    return false;
+  };
+
+  // 1. المنصة الإلكترونية
+  globalStudentResults.forEach(r => {
+    if (isMatch(r.date, r.examTitle)) {
       foundAny = true;
       let scoreText = r.score;
       let ratingBadge = "-";
@@ -347,15 +360,15 @@ function renderMonthlyReport() {
     }
   });
 
+  // 2. الامتحانات الورقية والخارجية
   for (const [examName, score] of Object.entries(globalStudentExternalResults)) {
-    const lowerExamName = examName.toLowerCase();
-    if (searchTerms.some(term => lowerExamName.includes(term))) {
+    if (isMatch("", examName)) {
       foundAny = true;
       let scoreText = score;
       let ratingBadge = "-";
 
       if (!score || score.trim() === "") {
-        scoreText = `<span style="color:#ef4444; font-size:11px; font-weight:bold;">لم يؤدِ الامتحان</span>`;
+        scoreText = `<span style="color:#ef4444; font-size:11px; font-weight:bold; white-space:nowrap;">لم يؤدِ الامتحان</span>`;
       } else {
         const parsed = parseScoreString(score);
         if (parsed && parsed.max > 0) {
@@ -391,7 +404,6 @@ function renderMonthlyReport() {
     </div>
   `;
 
-  // إضافة الحاوية table-responsive لمنع خروج الجدول عن الإطار
   const tableHtml = `
     <div class="table-responsive">
       <table class="report-table">
