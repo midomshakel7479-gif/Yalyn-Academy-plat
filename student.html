@@ -52,10 +52,10 @@
   .unit-select-wrapper { margin: 20px 0; }
   .unit-select-wrapper select.field { text-align: right; border-radius: 14px; padding: 14px 18px; }
   
-  /* الحاوية التي تمنع خروج الجدول عن الإطار في الهواتف */
+  /* الحاوية التي تمنع خروج الجدول عن الإطار وتضيف شريط تمرير عند الحاجة */
   .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; background: rgba(255,255,255,0.02); }
-  .report-table { width: 100%; min-width: 320px; border-collapse: collapse; font-size: 13px; }
-  .report-table th, .report-table td { padding: 12px 8px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .report-table { width: 100%; min-width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
+  .report-table th, .report-table td { padding: 12px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
 </style>
 </head>
 <body>
@@ -92,7 +92,7 @@
     <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
     <div id="historyListContainer"></div>
 
-    <!-- قسم التقرير الشهري الاحترافي -->
+    <!-- قسم التقرير الشهري المفصل -->
     <div style="margin-top:35px; background:linear-gradient(145deg, #1f1f1f, #0d0d0d); border:1px solid var(--gold-main); border-radius:20px; padding:20px;">
       <h3 style="font-size:18px; color:var(--gold-main); margin:0 0 15px;">📅 التقرير الشهري المفصل</h3>
       <p style="color:var(--text-muted); font-size:13px;">اختر الشهر لعرض كافة درجاتك وتقييمك العام:</p>
@@ -212,7 +212,19 @@ async function loadDashboard() {
     studentCompletedExamIds.clear();
     
     globalStudentResults = data.results || [];
-    globalStudentExternalResults = data.externalResults || {}; 
+    
+    // دعم التوافقية حتى لو لم يتم تحديث الكود الخلفي
+    let extRes = data.externalResults;
+    globalStudentExternalResults = {};
+    if (Array.isArray(extRes)) {
+        extRes.forEach(item => {
+            if (item.examTitle && item.score) {
+                globalStudentExternalResults[item.examTitle] = item.score;
+            }
+        });
+    } else if (typeof extRes === 'object' && extRes !== null) {
+        globalStudentExternalResults = extRes;
+    }
     
     if(globalStudentResults.length > 0) {
       globalStudentResults.forEach((r, idx) => {
@@ -271,8 +283,7 @@ async function loadDashboard() {
 
 function parseScoreString(scoreStr) {
   if (!scoreStr) return null;
-  const engScore = scoreStr.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-  // يدعم كافة الفواصل: / أو \ أو - أو "من"
+  let engScore = String(scoreStr).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
   const match = engScore.match(/(\d+(?:\.\d+)?)\s*(?:\/|\\|-|من)\s*(\d+(?:\.\d+)?)/);
   if (match) {
     return { obtained: parseFloat(match[1]), max: parseFloat(match[2]) };
@@ -305,37 +316,32 @@ function renderMonthlyReport() {
     return;
   }
 
-  const monthNames = {
-    "9": ["سبتمبر", "september", "sep"], "10": ["أكتوبر", "october", "oct"],
-    "11": ["نوفمبر", "november", "nov"], "12": ["ديسمبر", "december", "dec"],
-    "1": ["يناير", "january", "jan"], "2": ["فبراير", "february", "feb"],
-    "3": ["مارس", "march", "mar"], "4": ["أبريل", "april", "apr"],
-    "5": ["مايو", "may"]
-  };
-  const searchTerms = monthNames[monthNum];
   const targetMonth = parseInt(monthNum);
+  const monthNames = {
+    9: ["سبتمبر", "september", "sep"], 10: ["أكتوبر", "october", "oct"],
+    11: ["نوفمبر", "november", "nov"], 12: ["ديسمبر", "december", "dec"],
+    1: ["يناير", "january", "jan"], 2: ["فبراير", "february", "feb"],
+    3: ["مارس", "march", "mar"], 4: ["أبريل", "april", "apr"], 5: ["مايو", "may"]
+  };
+  const searchTerms = monthNames[targetMonth] || [];
+
+  // دالة ذكية جداً للبحث عن الشهر
+  const isMatch = (dateStr, titleStr) => {
+    const title = (titleStr || "").toLowerCase();
+    if (searchTerms.some(term => title.includes(term))) return true;
+    
+    if (dateStr) {
+       let engDate = String(dateStr).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
+       let nums = engDate.match(/\d+/g);
+       if (nums && nums.some(n => parseInt(n) === targetMonth)) return true;
+    }
+    return false;
+  };
 
   let totalObtained = 0;
   let totalMax = 0;
   let foundAny = false;
   let htmlRows = "";
-
-  // دالة ذكية لفحص التطابق مع الشهر (تبحث في الاسم وفي التاريخ بكل الصيغ)
-  const isMatch = (dateStr, titleStr) => {
-    const title = (titleStr || "").toLowerCase();
-    // 1. هل يحتوي اسم الامتحان على اسم الشهر أو رقمه؟
-    if (searchTerms.some(term => title.includes(term))) return true;
-    if (new RegExp(`\\b${targetMonth}\\b`).test(title)) return true;
-
-    // 2. هل يحتوي التاريخ على رقم الشهر؟
-    if (!dateStr) return false;
-    let engDate = dateStr.replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d));
-    let nums = engDate.match(/\d+/g);
-    if (nums && nums.length >= 2) {
-      if (parseInt(nums[0]) === targetMonth || parseInt(nums[1]) === targetMonth) return true;
-    }
-    return false;
-  };
 
   // 1. المنصة الإلكترونية
   globalStudentResults.forEach(r => {
@@ -352,10 +358,10 @@ function renderMonthlyReport() {
       }
 
       htmlRows += `<tr>
-                <td>${r.examTitle}</td>
-                <td style="text-align:center;"><span class="pill" style="font-size:10px; padding:3px 6px;">إلكتروني</span></td>
-                <td style="text-align:center; direction:ltr; font-weight:bold; white-space:nowrap;">${scoreText}</td>
-                <td style="text-align:center;">${ratingBadge}</td>
+                <td style="text-align:right;">${r.examTitle}</td>
+                <td><span class="pill" style="font-size:10px; padding:3px 6px;">إلكتروني</span></td>
+                <td style="direction:ltr; font-weight:bold; white-space:nowrap;">${scoreText}</td>
+                <td>${ratingBadge}</td>
                </tr>`;
     }
   });
@@ -367,7 +373,7 @@ function renderMonthlyReport() {
       let scoreText = score;
       let ratingBadge = "-";
 
-      if (!score || score.trim() === "") {
+      if (!score || String(score).trim() === "") {
         scoreText = `<span style="color:#ef4444; font-size:11px; font-weight:bold; white-space:nowrap;">لم يؤدِ الامتحان</span>`;
       } else {
         const parsed = parseScoreString(score);
@@ -380,10 +386,10 @@ function renderMonthlyReport() {
       }
 
       htmlRows += `<tr>
-                <td>${examName}</td>
-                <td style="text-align:center;"><span class="pill-gray" style="font-size:10px; padding:3px 6px; background:#b45309; color:#fff; border:0;">ورقي</span></td>
-                <td style="text-align:center; direction:ltr; font-weight:bold; color:var(--gold-main); white-space:nowrap;">${scoreText}</td>
-                <td style="text-align:center;">${ratingBadge}</td>
+                <td style="text-align:right;">${examName}</td>
+                <td><span class="pill-gray" style="font-size:10px; padding:3px 6px; background:#b45309; color:#fff; border:0;">ورقي</span></td>
+                <td style="direction:ltr; font-weight:bold; color:var(--gold-main); white-space:nowrap;">${scoreText}</td>
+                <td>${ratingBadge}</td>
                </tr>`;
     }
   }
@@ -409,9 +415,9 @@ function renderMonthlyReport() {
       <table class="report-table">
         <tr style="background:rgba(251,191,36,0.1); color:var(--gold-main);">
           <th style="text-align:right;">الامتحان</th>
-          <th style="text-align:center;">النوع</th>
-          <th style="text-align:center;">الدرجة</th>
-          <th style="text-align:center;">التقييم</th>
+          <th>النوع</th>
+          <th>الدرجة</th>
+          <th>التقييم</th>
         </tr>
         ${htmlRows}
       </table>
