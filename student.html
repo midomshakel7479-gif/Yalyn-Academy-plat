@@ -46,7 +46,6 @@
   .choice-label { display: flex; align-items: center; gap: 12px; background: rgba(0, 0, 0, 0.5); border: 1px solid rgba(251, 191, 36, 0.3); padding: 14px 18px; border-radius: 12px; margin-bottom: 10px; cursor: pointer; }
   .choice-label input[type="radio"] { accent-color: var(--gold-main); width: 20px; height: 20px; }
 
-  /* إضافات الفيديوهات */
   .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid var(--line); }
   .video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
   .featured-video-badge { display:inline-block; background: linear-gradient(135deg, #fde047, #f59e0b); color:#000; font-size:12px; font-weight:900; padding:4px 12px; border-radius:99px; margin-bottom:10px; }
@@ -87,6 +86,29 @@
 
     <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
     <div id="historyListContainer"></div>
+
+    <!-- قسم التقرير الشهري الجديد للطالب -->
+    <div style="margin-top:35px; background:linear-gradient(145deg, #1f1f1f, #0d0d0d); border:1px solid var(--gold-main); border-radius:20px; padding:25px;">
+      <h3 style="font-size:20px; color:var(--gold-main); margin:0 0 15px;">📅 التقرير الشهري المجمع</h3>
+      <p style="color:var(--text-muted); font-size:14px;">اختر الشهر لعرض كافة درجاتك (من المنصة والامتحانات الورقية):</p>
+      
+      <select id="reportMonthSelect" class="field" onchange="renderMonthlyReport()" style="margin-bottom:20px; border-radius:14px; text-align:right; padding:12px;">
+        <option value="">-- اختر الشهر --</option>
+        <option value="9">سبتمبر (9)</option>
+        <option value="10">أكتوبر (10)</option>
+        <option value="11">نوفمبر (11)</option>
+        <option value="12">ديسمبر (12)</option>
+        <option value="1">يناير (1)</option>
+        <option value="2">فبراير (2)</option>
+        <option value="3">مارس (3)</option>
+        <option value="4">أبريل (4)</option>
+        <option value="5">مايو (5)</option>
+      </select>
+
+      <div id="monthlyReportRenderBox">
+        <div style="text-align:center; color:#777; padding:10px;">اختر الشهر من القائمة بالأعلى</div>
+      </div>
+    </div>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:35px; border-bottom:1px solid rgba(251,191,36,0.2); padding-bottom:10px;">
        <h3 style="font-size:18px;color:var(--text-main);margin:0;">🎬 الفيديوهات والدروس المسجلة:</h3>
@@ -131,6 +153,7 @@ let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
 let globalStudentResults = [];
+let globalStudentExternalResults = {}; // تخزين الدرجات الخارجية أفقياً
 let globalStudentVideos = [];
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
@@ -182,8 +205,10 @@ async function loadDashboard() {
     });
     const data = await res.json();
     studentCompletedExamIds.clear();
+    
     globalStudentResults = data.results || [];
-
+    globalStudentExternalResults = data.externalResults || {}; 
+    
     if(globalStudentResults.length > 0) {
       globalStudentResults.forEach((r, idx) => {
         studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
@@ -220,115 +245,128 @@ async function loadDashboard() {
       examsBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#f87171;text-align:center;'>لا توجد اختبارات متاحة حالياً.</div>";
     }
 
-    // === تنظيم عرض الفيديوهات: آخر فيديو مضاف أولاً، ثم تصنيف حسب الوحدة ===
     globalStudentVideos = data.videos || [];
-
     if (globalStudentVideos.length > 0) {
       const latest = globalStudentVideos[globalStudentVideos.length - 1];
       featuredBox.innerHTML = `
         <div class="q-card" style="margin-bottom:15px; padding:15px; text-align:right; direction:rtl;">
           <span class="featured-video-badge">🆕 آخر فيديو مضاف</span>
           <h4 style="color:var(--gold-main); margin:0 0 12px 0; font-size:16px;">▶ ${latest.title}</h4>
-          <div class="video-wrapper">
-            <iframe src="${latest.url}" allowfullscreen></iframe>
-          </div>
+          <div class="video-wrapper"><iframe src="${latest.url}" allowfullscreen></iframe></div>
         </div>
       `;
-
       const units = [...new Set(globalStudentVideos.map(v => v.unit || "عام"))];
-      units.forEach(u => {
-        unitSelect.innerHTML += `<option value="${u}">${u}</option>`;
-      });
+      units.forEach(u => { unitSelect.innerHTML += `<option value="${u}">${u}</option>`; });
     } else {
       featuredBox.innerHTML = "";
       videosBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;'>لا توجد فيديوهات متاحة لهذا الصف حالياً.</div>";
     }
-
   } catch(e) { examsBox.innerHTML = "<div style='color:#f87171'>خطأ في الخادم.</div>"; }
+}
+
+function renderMonthlyReport() {
+  const monthNum = document.getElementById('reportMonthSelect').value;
+  const box = document.getElementById('monthlyReportRenderBox');
+  
+  if (!monthNum) {
+    box.innerHTML = "<div style='text-align:center; color:#777; padding:10px;'>اختر الشهر من القائمة بالأعلى</div>";
+    return;
+  }
+
+  const monthNames = {
+    "9": ["سبتمبر", "september", "sep"], "10": ["أكتوبر", "october", "oct"],
+    "11": ["نوفمبر", "november", "nov"], "12": ["ديسمبر", "december", "dec"],
+    "1": ["يناير", "january", "jan"], "2": ["فبراير", "february", "feb"],
+    "3": ["مارس", "march", "mar"], "4": ["أبريل", "april", "apr"],
+    "5": ["مايو", "may"]
+  };
+  const searchTerms = monthNames[monthNum];
+
+  let html = `<table style="width:100%; border-collapse:collapse; margin-top:10px;">
+                <tr style="border-bottom:1px solid rgba(251,191,36,0.3); color:var(--gold-main);">
+                  <th style="padding:10px; text-align:right;">الامتحان</th>
+                  <th style="padding:10px; text-align:center;">المصدر</th>
+                  <th style="padding:10px; text-align:center;">الدرجة</th>
+                </tr>`;
+  let foundAny = false;
+
+  // 1. فلترة درجات المنصة 
+  globalStudentResults.forEach(r => {
+    const dateParts = r.date.split('/');
+    if (dateParts.length >= 2 && parseInt(dateParts[1]) == parseInt(monthNum)) {
+      foundAny = true;
+      html += `<tr>
+                <td style="padding:10px; border-bottom:1px solid #222;">${r.examTitle}</td>
+                <td style="padding:10px; border-bottom:1px solid #222; text-align:center;"><span class="pill" style="font-size:10px;">المنصة</span></td>
+                <td style="padding:10px; border-bottom:1px solid #222; text-align:center; direction:ltr; font-weight:bold;">${r.score}</td>
+               </tr>`;
+    }
+  });
+
+  // 2. فلترة الدرجات الخارجية أفقياً
+  for (const [examName, score] of Object.entries(globalStudentExternalResults)) {
+    const lowerExamName = examName.toLowerCase();
+    if (searchTerms.some(term => lowerExamName.includes(term)) && score !== "") {
+      foundAny = true;
+      html += `<tr>
+                <td style="padding:10px; border-bottom:1px solid #222;">${examName}</td>
+                <td style="padding:10px; border-bottom:1px solid #222; text-align:center;"><span class="pill-gray" style="font-size:10px; background:#b45309; color:#fff; border:0;">خارجي</span></td>
+                <td style="padding:10px; border-bottom:1px solid #222; text-align:center; direction:ltr; font-weight:bold; color:var(--gold-main);">${score}</td>
+               </tr>`;
+    }
+  }
+
+  html += `</table>`;
+  box.innerHTML = foundAny ? html : `<div style="text-align:center; padding:20px; background:rgba(255,0,0,0.1); border-radius:12px; color:#f87171;">لا توجد درجات مسجلة لك في هذا الشهر.</div>`;
 }
 
 function renderUnitVideos() {
   const unitSelect = document.getElementById('unitSelect');
   const videosBox = document.getElementById('videosListContainer');
   const selectedUnit = unitSelect.value;
-
-  if (!selectedUnit) {
-    videosBox.innerHTML = "";
-    return;
-  }
+  if (!selectedUnit) { videosBox.innerHTML = ""; return; }
 
   const filtered = globalStudentVideos.filter(v => (v.unit || "عام") === selectedUnit);
   if (filtered.length === 0) {
     videosBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;'>لا توجد فيديوهات في هذه الوحدة.</div>";
     return;
   }
-
   videosBox.innerHTML = "";
   filtered.forEach(v => {
     videosBox.innerHTML += `
       <div class="q-card" style="margin-bottom:15px; padding:15px; text-align:right; direction:rtl;">
         <h4 style="color:var(--gold-main); margin:0 0 12px 0; font-size:16px;">▶ ${v.title}</h4>
-        <div class="video-wrapper">
-          <iframe src="${v.url}" allowfullscreen></iframe>
-        </div>
+        <div class="video-wrapper"><iframe src="${v.url}" allowfullscreen></iframe></div>
       </div>
     `;
   });
 }
 
+// === بقية الدوال: startExam و submitExam و renderReviewScreen و logout تبقى دون تغيير كما في الكود الأصلي ===
 async function startExam(examId, encodedTitle) {
   const examTitle = decodeURIComponent(encodedTitle);
   if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
-
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'block';
-  document.getElementById('currentExamTitle').textContent = examTitle;
-  document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:18px;'>جاري التجهيز...</div>";
-
+  document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'block'; document.getElementById('currentExamTitle').textContent = examTitle; document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:18px;'>جاري التجهيز...</div>";
   try {
-    const res = await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade })
-    });
+    const res = await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade }) });
     const data = await res.json();
     activeExamQuestions = data.questions || [];
     if (activeExamQuestions.length === 0) throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
     document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} Questions`;
-
-    const box = document.getElementById('questionsRenderBox');
-    box.innerHTML = "";
-
+    const box = document.getElementById('questionsRenderBox'); box.innerHTML = "";
     activeExamQuestions.forEach((q, idx) => {
-      const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4);
-      const isMcq = c1 !== "";
-
-      let rawUrl = toStr(q.image).replace(/['"]/g, '').trim();
-      let finalImgUrl = "";
-
+      const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4); const isMcq = c1 !== "";
+      let rawUrl = toStr(q.image).replace(/['"]/g, '').trim(); let finalImgUrl = "";
       if (rawUrl) {
         let fileId = "";
-        if (rawUrl.includes('/d/')) {
-          const parts = rawUrl.split('/d/');
-          if (parts[1]) fileId = parts[1].split('/')[0];
-        } else if (rawUrl.includes('id=')) {
-          const urlParams = new URLSearchParams(rawUrl.split('?')[1]);
-          fileId = urlParams.get('id');
-        }
-
-        if (fileId) {
-          finalImgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
-        } else {
-          finalImgUrl = rawUrl;
-        }
+        if (rawUrl.includes('/d/')) { const parts = rawUrl.split('/d/'); if (parts[1]) fileId = parts[1].split('/')[0]; } else if (rawUrl.includes('id=')) { const urlParams = new URLSearchParams(rawUrl.split('?')[1]); fileId = urlParams.get('id'); }
+        if (fileId) { finalImgUrl = `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`; } else { finalImgUrl = rawUrl; }
       }
-
       const imageHtml = finalImgUrl ? `<div style="text-align:center;"><img src="${finalImgUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x200?text=Image+Load+Error';"></div>` : "";
       const questionText = toStr(q.question) !== "" ? `<div style="font-size:18px;font-weight:800;margin-bottom:18px;color:#fff;"><span style="color:var(--gold-main);">${idx + 1}.</span> ${toStr(q.question)}</div>` : "";
-
       box.innerHTML += `
         <div class="q-card">
-          ${questionText}
-          ${imageHtml}
+          ${questionText} ${imageHtml}
           ${isMcq ? `
             <div>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
@@ -344,60 +382,29 @@ async function startExam(examId, encodedTitle) {
     });
   } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:25px;border-radius:15px;'>${e.message}</div>`; }
 }
-
 async function submitExam() {
   let score = 0; const reviewList = [];
   activeExamQuestions.forEach((q, idx) => {
     let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
-    if(isMcq) {
-      const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
-      if(checked) studentAns = toStr(checked.value);
-    } else {
-      const inp = document.getElementById(`complete_ans_${idx}`);
-      if(inp) studentAns = toStr(inp.value);
-    }
-
-    const cleanStudentAns = studentAns.replace(/[, ]/g, '').toLowerCase();
-    const cleanCorrectAns = toStr(q.correctAnswer).replace(/[, ]/g, '').toLowerCase();
-
-    const isCorrect = (cleanStudentAns === cleanCorrectAns);
-    if(isCorrect) score++;
-
+    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
+    const cleanStudentAns = studentAns.replace(/[, ]/g, '').toLowerCase(); const cleanCorrectAns = toStr(q.correctAnswer).replace(/[, ]/g, '').toLowerCase();
+    const isCorrect = (cleanStudentAns === cleanCorrectAns); if(isCorrect) score++;
     reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
   });
-
-  const finishBtn = document.getElementById('finishExamBtn');
-  finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
-  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
-  const finalScoreString = `${score} / ${totalQuestions}`;
-  const examTitle = document.getElementById('currentExamTitle').textContent;
-  const reviewDataStr = JSON.stringify(reviewList);
-
+  const finishBtn = document.getElementById('finishExamBtn'); finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
+  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15; const finalScoreString = `${score} / ${totalQuestions}`; const examTitle = document.getElementById('currentExamTitle').textContent; const reviewDataStr = JSON.stringify(reviewList);
   try {
-    await fetch(cfg.webAppUrl, {
-      method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr })
-    });
-    studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
-    renderReviewScreen(reviewList, finalScoreString);
-  } catch(e) {
-    document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى.";
-    finishBtn.disabled = false;
-  }
+    await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr }) });
+    studentCompletedExamIds.add(toStr(examTitle).toLowerCase()); finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)"; renderReviewScreen(reviewList, finalScoreString);
+  } catch(e) { document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; finishBtn.disabled = false; }
 }
-
 function openPastReview(idx) {
   const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
   let parsedReview = []; try { parsedReview = JSON.parse(r.reviewData); } catch(e) { alert("تعذر تحميل المراجعة."); return; }
   renderReviewScreen(parsedReview, r.score);
 }
-
 function renderReviewScreen(reviewList, scoreStr) {
-  document.getElementById('dashboardView').style.display = 'none';
-  document.getElementById('examView').style.display = 'none';
-  document.getElementById('reviewView').style.display = 'block';
-  document.getElementById('finalScoreBadge').textContent = scoreStr;
+  document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'block'; document.getElementById('finalScoreBadge').textContent = scoreStr;
   const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
   reviewList.forEach((item, i) => {
     reviewBox.innerHTML += `
@@ -409,7 +416,6 @@ function renderReviewScreen(reviewList, scoreStr) {
     `;
   });
 }
-
 function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }
 </script>
 </body>
