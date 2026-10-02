@@ -158,10 +158,52 @@ let currentStudent = null;
 let activeExamQuestions = [];
 let studentCompletedExamIds = new Set();
 let globalStudentResults = [];
-let globalStudentExternalResults = {}; 
+let globalStudentExternalResults = {};
 let globalStudentVideos = [];
+let essayAnswers = {}; // يخزن صور الإجابات المقالية (base64) مؤقتاً في الذاكرة فقط حتى لحظة التسليم
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
+
+// ضغط الصورة قبل إرسالها: تصغير العرض لـ 900px وإعادة الترميز بصيغة JPEG بجودة 0.6
+// هذا يقلل حجم الصورة بشكل كبير جداً (من عدة ميجابايت إلى عشرات الكيلوبايت) قبل رفعها لتوفير سرعة الاتصال
+function compressImageToBase64(file, maxWidth = 900, quality = 0.6) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > maxWidth) { h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl.split(',')[1]);
+      };
+      img.onerror = () => reject(new Error("تعذر فتح الصورة."));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error("تعذر قراءة الملف."));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handleEssayImage(event, idx) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const previewBox = document.getElementById(`essay_preview_${idx}`);
+  previewBox.innerHTML = "<span style='color:var(--gold-main);font-size:13px;'>جاري تجهيز الصورة...</span>";
+  try {
+    const base64 = await compressImageToBase64(file);
+    essayAnswers[idx] = base64;
+    previewBox.innerHTML = `
+      <img src="data:image/jpeg;base64,${base64}" style="max-width:220px;border-radius:10px;border:2px solid var(--gold-main);display:block;margin-top:8px;">
+      <div style="color:#4ade80;font-size:13px;font-weight:bold;margin-top:6px;">✅ تم إرفاق الصورة بنجاح (يمكنك الضغط على الزر مرة أخرى لإعادة التصوير)</div>
+    `;
+  } catch(e) {
+    previewBox.innerHTML = "<span style='color:#f87171;font-size:13px;'>تعذرت معالجة الصورة، حاول اختيار صورة أخرى.</span>";
+  }
+}
 
 async function studentLogin() {
   const code = document.getElementById('studentCode').value.trim();
@@ -484,8 +526,10 @@ async function startExam(examId, encodedTitle) {
     if (activeExamQuestions.length === 0) throw new Error("لا توجد أسئلة نشطة في هذا الاختبار.");
     document.getElementById('questionCountBadge').textContent = `${activeExamQuestions.length} Questions`;
     const box = document.getElementById('questionsRenderBox'); box.innerHTML = "";
+    essayAnswers = {};
     activeExamQuestions.forEach((q, idx) => {
       const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4); const isMcq = c1 !== "";
+      const qType = toStr(q.qType).toLowerCase();
       let rawUrl = toStr(q.image).replace(/['"]/g, '').trim(); let finalImgUrl = "";
       if (rawUrl) {
         let fileId = "";
@@ -494,39 +538,104 @@ async function startExam(examId, encodedTitle) {
       }
       const imageHtml = finalImgUrl ? `<div style="text-align:center;"><img src="${finalImgUrl}" referrerpolicy="no-referrer" style="max-width:100%; border-radius:12px; margin-bottom:18px; border:2px solid var(--gold-main);" onerror="this.onerror=null;this.src='https://via.placeholder.com/400x200?text=Image+Load+Error';"></div>` : "";
       const questionText = toStr(q.question) !== "" ? `<div style="font-size:16px;font-weight:800;margin-bottom:18px;color:#fff;"><span style="color:var(--gold-main);">${idx + 1}.</span> ${toStr(q.question)}</div>` : "";
-      box.innerHTML += `
-        <div class="q-card">
-          ${questionText} ${imageHtml}
-          ${isMcq ? `
+
+      let answerBlockHtml;
+      if (qType === 'essay') {
+        answerBlockHtml = `
+          <input type="file" accept="image/*" capture="environment" id="essay_file_${idx}" style="display:none" onchange="handleEssayImage(event, ${idx})">
+          <button type="button" class="btn" style="width:100%; padding:14px; font-size:15px;" onclick="document.getElementById('essay_file_${idx}').click()">📷 صوّر إجابتك</button>
+          <div id="essay_preview_${idx}" style="margin-top:12px;"></div>
+        `;
+      } else if (isMcq) {
+        answerBlockHtml = `
             <div>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c1}"> <span>${c1}</span></label>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c2}"> <span>${c2}</span></label>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c3}"> <span>${c3}</span></label>
               <label class="choice-label"><input type="radio" name="q_${idx}" value="${c4}"> <span>${c4}</span></label>
             </div>
-          ` : `
+          `;
+      } else {
+        answerBlockHtml = `
             <input type="text" id="complete_ans_${idx}" style="width:100%;background:#000;border:2px solid rgba(251,191,36,0.5);border-radius:12px;padding:15px;color:#fde047;font-size:16px;font-weight:bold;direction:ltr;" placeholder="Type answer here...">
-          `}
+          `;
+      }
+
+      box.innerHTML += `
+        <div class="q-card">
+          ${questionText} ${imageHtml}
+          ${answerBlockHtml}
         </div>
       `;
     });
   } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:20px;border-radius:15px;font-size:14px;'>${e.message}</div>`; }
 }
 async function submitExam() {
-  let score = 0; const reviewList = [];
+  const finishBtn = document.getElementById('finishExamBtn');
+  const statusMsg = document.getElementById('examStatusMsg');
+  finishBtn.disabled = true;
+  let score = 0;
+  const reviewList = [];
+  const essayIndexes = [];
+
+  // أولاً: نصحح كل الأسئلة العادية (اختيارات / إكمال) فوراً كما كان
   activeExamQuestions.forEach((q, idx) => {
+    const qType = toStr(q.qType).toLowerCase();
+    if (qType === 'essay') { essayIndexes.push(idx); return; }
     let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
     if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
     const cleanStudentAns = studentAns.replace(/[, ]/g, '').toLowerCase(); const cleanCorrectAns = toStr(q.correctAnswer).replace(/[, ]/g, '').toLowerCase();
     const isCorrect = (cleanStudentAns === cleanCorrectAns); if(isCorrect) score++;
-    reviewList.push({ question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect });
+    reviewList[idx] = { question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect, qType: 'normal' };
   });
-  const finishBtn = document.getElementById('finishExamBtn'); finishBtn.disabled = true; finishBtn.textContent = "جاري الحفظ...";
-  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15; const finalScoreString = `${score} / ${totalQuestions}`; const examTitle = document.getElementById('currentExamTitle').textContent; const reviewDataStr = JSON.stringify(reviewList);
+
+  // ثانياً: الأسئلة المقالية تُصحح بالذكاء الاصطناعي (كل سؤال على حدة، بالترتيب)
+  if (essayIndexes.length > 0) {
+    finishBtn.textContent = "جاري التصحيح...";
+    statusMsg.style.color = 'var(--gold-main)';
+    statusMsg.textContent = "جاري تصحيح الأسئلة المقالية بالذكاء الاصطناعي، برجاء الانتظار ولا تغلق الصفحة...";
+
+    for (const idx of essayIndexes) {
+      const q = activeExamQuestions[idx];
+      const imgBase64 = essayAnswers[idx];
+      if (!imgBase64) {
+        reviewList[idx] = { question: toStr(q.question), studentAns: "لم يتم رفع صورة", correctAns: "", isCorrect: false, qType: 'essay', essayScore: 0, essayFeedback: "لم يقم الطالب برفع صورة لإجابته على هذا السؤال." };
+        continue;
+      }
+      try {
+        const res = await fetch(cfg.webAppUrl, {
+          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify({ action: "gradeEssayWithGemini", imageBase64: imgBase64, question: toStr(q.question) })
+        });
+        const data = await res.json();
+        const essayScore = data.success ? (parseFloat(data.score) || 0) : 0;
+        const essayFeedback = data.success ? (data.feedback || "") : "تعذر تصحيح هذا السؤال تلقائياً، سيتم مراجعته من قبل المعلم.";
+        score += (essayScore / 10); // توحيد وزن السؤال المقالي مع باقي الأسئلة (كل سؤال = نقطة واحدة)
+        reviewList[idx] = { question: toStr(q.question), studentAns: "📷 تم تصوير الإجابة وتصحيحها", correctAns: "", isCorrect: essayScore >= 5, qType: 'essay', essayScore: essayScore, essayFeedback: essayFeedback };
+      } catch(e) {
+        reviewList[idx] = { question: toStr(q.question), studentAns: "📷 تم تصوير الإجابة", correctAns: "", isCorrect: false, qType: 'essay', essayScore: 0, essayFeedback: "حدث خطأ في الاتصال بخدمة التصحيح الذكي." };
+      }
+    }
+    statusMsg.textContent = "";
+  }
+
+  finishBtn.textContent = "جاري الحفظ...";
+  const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
+  const displayScore = Number.isInteger(score) ? score : score.toFixed(1);
+  const finalScoreString = `${displayScore} / ${totalQuestions}`;
+  const examTitle = document.getElementById('currentExamTitle').textContent;
+  const reviewDataStr = JSON.stringify(reviewList);
   try {
     await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr }) });
-    studentCompletedExamIds.add(toStr(examTitle).toLowerCase()); finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)"; renderReviewScreen(reviewList, finalScoreString);
-  } catch(e) { document.getElementById('examStatusMsg').textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى."; finishBtn.disabled = false; }
+    studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
+    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
+    essayAnswers = {}; // حذف الصور من الذاكرة فوراً بعد الحفظ - لا تُخزن أي صورة في الشيت أو في المتصفح بعد هذه اللحظة
+    renderReviewScreen(reviewList, finalScoreString);
+  } catch(e) {
+    statusMsg.textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى.";
+    finishBtn.disabled = false;
+    finishBtn.textContent = "إنهاء الامتحان (Finish)";
+  }
 }
 function openPastReview(idx) {
   const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
@@ -537,6 +646,17 @@ function renderReviewScreen(reviewList, scoreStr) {
   document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'block'; document.getElementById('finalScoreBadge').textContent = scoreStr;
   const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
   reviewList.forEach((item, i) => {
+    if (!item) return;
+    if (item.qType === 'essay') {
+      reviewBox.innerHTML += `
+        <div style="border-radius:18px;padding:15px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:rtl;text-align:right;border-right:5px solid ${item.essayScore >= 5 ? '#22c55e' : '#ef4444'};">
+          <div style="font-weight:bold;color:#fff;font-size:15px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question} <span class="pill" style="font-size:11px; margin-right:6px;">مقالي</span></div>
+          <div style="font-size:14px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">تقييم الذكاء الاصطناعي: <b style="color:var(--gold-main);" dir="ltr">${item.essayScore} / 10</b></div>
+          ${item.essayFeedback ? `<div style="font-size:13px;color:#ccc;background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;">${item.essayFeedback}</div>` : ''}
+        </div>
+      `;
+      return;
+    }
     reviewBox.innerHTML += `
       <div style="border-radius:18px;padding:15px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:ltr;text-align:left;border-left:5px solid ${item.isCorrect ? '#22c55e' : '#ef4444'};">
         <div style="font-weight:bold;color:#fff;font-size:15px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question}</div>
