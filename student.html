@@ -160,7 +160,8 @@ let studentCompletedExamIds = new Set();
 let globalStudentResults = [];
 let globalStudentExternalResults = {};
 let globalStudentVideos = [];
-let essayAnswers = {}; // يخزن صور الإجابات المقالية (base64) مؤقتاً في الذاكرة فقط حتى لحظة التسليم
+let essayAnswers = {}; // صور الإجابات المقالية تبقى هنا حتى يتم تأكيد حفظها في الطابور
+let activeSubmissionId = "";
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
@@ -571,71 +572,156 @@ async function startExam(examId, encodedTitle) {
   } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:20px;border-radius:15px;font-size:14px;'>${e.message}</div>`; }
 }
 async function submitExam() {
+  if (examSubmitInProgress) return;
+  examSubmitInProgress = true;
   const finishBtn = document.getElementById('finishExamBtn');
   const statusMsg = document.getElementById('examStatusMsg');
   finishBtn.disabled = true;
-  let score = 0;
+  let normalScore = 0;
   const reviewList = [];
+  const essayItems = [];
   const essayIndexes = [];
 
-  // أولاً: نصحح كل الأسئلة العادية (اختيارات / إكمال) فوراً كما كان
+  // 1) تصحيح الأسئلة العادية محلياً كما كان من قبل.
   activeExamQuestions.forEach((q, idx) => {
     const qType = toStr(q.qType).toLowerCase();
     if (qType === 'essay') { essayIndexes.push(idx); return; }
-    let studentAns = ""; const isMcq = toStr(q.choice1) !== "";
-    if(isMcq) { const checked = document.querySelector(`input[name="q_${idx}"]:checked`); if(checked) studentAns = toStr(checked.value); } else { const inp = document.getElementById(`complete_ans_${idx}`); if(inp) studentAns = toStr(inp.value); }
-    const cleanStudentAns = studentAns.replace(/[, ]/g, '').toLowerCase(); const cleanCorrectAns = toStr(q.correctAnswer).replace(/[, ]/g, '').toLowerCase();
-    const isCorrect = (cleanStudentAns === cleanCorrectAns); if(isCorrect) score++;
-    reviewList[idx] = { question: toStr(q.question), studentAns: studentAns || "No Answer", correctAns: toStr(q.correctAnswer), isCorrect: isCorrect, qType: 'normal' };
+    let studentAns = "";
+    const isMcq = toStr(q.choice1) !== "";
+    if (isMcq) {
+      const checked = document.querySelector(`input[name="q_${idx}"]:checked`);
+      if (checked) studentAns = toStr(checked.value);
+    } else {
+      const inp = document.getElementById(`complete_ans_${idx}`);
+      if (inp) studentAns = toStr(inp.value);
+    }
+    const cleanStudentAns = studentAns.replace(/[, ]/g, '').toLowerCase();
+    const cleanCorrectAns = toStr(q.correctAnswer).replace(/[, ]/g, '').toLowerCase();
+    const isCorrect = (cleanStudentAns === cleanCorrectAns);
+    if (isCorrect) normalScore++;
+    reviewList[idx] = {
+      question: toStr(q.question),
+      studentAns: studentAns || "No Answer",
+      correctAns: toStr(q.correctAnswer),
+      isCorrect: isCorrect,
+      qType: 'normal'
+    };
   });
 
-  // ثانياً: الأسئلة المقالية تُصحح بالذكاء الاصطناعي (كل سؤال على حدة، بالترتيب)
-  if (essayIndexes.length > 0) {
-    finishBtn.textContent = "جاري التصحيح...";
-    statusMsg.style.color = 'var(--gold-main)';
-    statusMsg.textContent = "جاري تصحيح الأسئلة المقالية بالذكاء الاصطناعي، برجاء الانتظار ولا تغلق الصفحة...";
+  // 2) تجهيز كل إجابات المقال للطابور. لا نرسل Gemini من المتصفح.
+  essayIndexes.forEach((idx) => {
+    const q = activeExamQuestions[idx];
+    const imgBase64 = essayAnswers[idx] || "";
+    reviewList[idx] = {
+      question: toStr(q.question),
+      studentAns: imgBase64 ? "📷 تم تصوير الإجابة" : "لم يتم رفع صورة",
+      correctAns: "",
+      isCorrect: false,
+      qType: 'essay',
+      essayScore: imgBase64 ? null : 0,
+      essayFeedback: imgBase64 ? "جاري وضع الإجابة في طابور التصحيح..." : "لم يقم الطالب برفع صورة لإجابته على هذا السؤال."
+    };
+    essayItems.push({
+      questionIndex: idx,
+      questionText: toStr(q.question),
+      imageBase64: imgBase64,
+      imageMimeType: "image/jpeg"
+    });
+  });
 
-    for (const idx of essayIndexes) {
-      const q = activeExamQuestions[idx];
-      const imgBase64 = essayAnswers[idx];
-      if (!imgBase64) {
-        reviewList[idx] = { question: toStr(q.question), studentAns: "لم يتم رفع صورة", correctAns: "", isCorrect: false, qType: 'essay', essayScore: 0, essayFeedback: "لم يقم الطالب برفع صورة لإجابته على هذا السؤال." };
-        continue;
-      }
-      try {
-        const res = await fetch(cfg.webAppUrl, {
-          method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ action: "gradeEssayWithGemini", imageBase64: imgBase64, question: toStr(q.question) })
-        });
-        const data = await res.json();
-        const essayScore = data.success ? (parseFloat(data.score) || 0) : 0;
-        const essayFeedback = data.success ? (data.feedback || "") : "تعذر تصحيح هذا السؤال تلقائياً، سيتم مراجعته من قبل المعلم.";
-        score += (essayScore / 10); // توحيد وزن السؤال المقالي مع باقي الأسئلة (كل سؤال = نقطة واحدة)
-        reviewList[idx] = { question: toStr(q.question), studentAns: "📷 تم تصوير الإجابة وتصحيحها", correctAns: "", isCorrect: essayScore >= 5, qType: 'essay', essayScore: essayScore, essayFeedback: essayFeedback };
-      } catch(e) {
-        reviewList[idx] = { question: toStr(q.question), studentAns: "📷 تم تصوير الإجابة", correctAns: "", isCorrect: false, qType: 'essay', essayScore: 0, essayFeedback: "حدث خطأ في الاتصال بخدمة التصحيح الذكي." };
-      }
-    }
-    statusMsg.textContent = "";
-  }
-
-  finishBtn.textContent = "جاري الحفظ...";
   const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
-  const displayScore = Number.isInteger(score) ? score : score.toFixed(1);
-  const finalScoreString = `${displayScore} / ${totalQuestions}`;
   const examTitle = document.getElementById('currentExamTitle').textContent;
-  const reviewDataStr = JSON.stringify(reviewList);
+  activeSubmissionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('YALYN-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+
+  finishBtn.textContent = "جاري حفظ الإجابات...";
+  statusMsg.style.color = 'var(--gold-main)';
+  statusMsg.textContent = essayItems.length
+    ? "جاري حفظ إجاباتك أولاً في طابور التصحيح الآمن. لا تغلق الصفحة..."
+    : "جاري حفظ النتيجة...";
+
   try {
-    await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "saveStudentResult", studentName: currentStudent.name, grade: currentStudent.grade, examTitle: examTitle, score: finalScoreString, date: new Date().toLocaleDateString('ar-EG'), reviewData: reviewDataStr }) });
-    studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-    finishBtn.disabled = false; finishBtn.textContent = "إنهاء الامتحان (Finish)";
-    essayAnswers = {}; // حذف الصور من الذاكرة فوراً بعد الحفظ - لا تُخزن أي صورة في الشيت أو في المتصفح بعد هذه اللحظة
-    renderReviewScreen(reviewList, finalScoreString);
-  } catch(e) {
-    statusMsg.textContent = "خطأ في الحفظ، يرجى المحاولة مرة أخرى.";
+    const saveRes = await fetch(cfg.webAppUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify({
+        action: "enqueueEssaySubmission",
+        submissionId: activeSubmissionId,
+        studentName: currentStudent.name,
+        grade: currentStudent.grade,
+        examTitle: examTitle,
+        normalScore: normalScore,
+        totalQuestions: totalQuestions,
+        reviewList: reviewList,
+        essayItems: essayItems
+      })
+    });
+    const saved = await saveRes.json();
+    if (!saved.success) throw new Error(saved.message || "تعذر حفظ الإجابات.");
+
+    // الآن أصبحت الإجابات محفوظة خارج المتصفح. يمكن حذف النسخ المحلية.
+    essayAnswers = {};
+
+    if (!essayItems.length) {
+      const finalScoreString = `${normalScore} / ${totalQuestions}`;
+      studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
+      statusMsg.textContent = "";
+      finishBtn.disabled = false;
+      finishBtn.textContent = "إنهاء الامتحان (Finish)";
+      examSubmitInProgress = false;
+      renderReviewScreen(reviewList, finalScoreString);
+      return;
+    }
+
+    // 3) ننتظر النتيجة من الطابور. إذا كان Gemini مشغولاً فلن تضيع الإجابة.
+    await pollEssaySubmission(activeSubmissionId, examTitle, reviewList, totalQuestions, finishBtn, statusMsg);
+
+  } catch (e) {
+    statusMsg.style.color = '#f87171';
+    statusMsg.textContent = "تعذر حفظ الإجابة في الطابور. لا تغلق الصفحة وحاول مرة أخرى.";
     finishBtn.disabled = false;
-    finishBtn.textContent = "إنهاء الامتحان (Finish)";
+    examSubmitInProgress = false;
+    finishBtn.textContent = "إعادة المحاولة";
   }
+}
+
+async function pollEssaySubmission(submissionId, examTitle, initialReview, totalQuestions, finishBtn, statusMsg) {
+  let attempts = 0;
+  while (attempts < 360) { // حتى 15 دقيقة تقريباً مع فاصل 5 ثوانٍ
+    attempts++;
+    try {
+      const res = await fetch(cfg.webAppUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify({ action: "getEssaySubmissionStatus", submissionId: submissionId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        const completed = Number(data.completed || 0);
+        const total = Number(data.total || 0);
+        if (data.status === "COMPLETED" && data.finalScore) {
+          let finalReview = initialReview;
+          try { if (data.reviewData) finalReview = JSON.parse(data.reviewData); } catch(e) {}
+          studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
+          finishBtn.disabled = false;
+          finishBtn.textContent = "إنهاء الامتحان (Finish)";
+          statusMsg.textContent = "";
+          renderReviewScreen(finalReview, data.finalScore);
+          return;
+        }
+        statusMsg.textContent = `تم حفظ الإجابة بأمان. جاري التصحيح... (${completed}/${total})`;
+      }
+    } catch (e) {
+      statusMsg.textContent = "الإجابة محفوظة، وجاري انتظار التصحيح...";
+    }
+    await new Promise(resolve => setTimeout(resolve, 5000));
+  }
+
+  // بعد 15 دقيقة لا نفقد الإجابة؛ فقط نبلغ الطالب أن التصحيح ما زال في الخلفية.
+  finishBtn.disabled = false;
+  examSubmitInProgress = false;
+  finishBtn.textContent = "العودة للوحة الرئيسية";
+  statusMsg.style.color = 'var(--gold-main)';
+  statusMsg.textContent = "تم حفظ إجاباتك بأمان، والتصحيح ما زال يعمل في الخلفية. يمكنك العودة للوحة الرئيسية ثم فتح النتائج لاحقاً.";
 }
 function openPastReview(idx) {
   const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
