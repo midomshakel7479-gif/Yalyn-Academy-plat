@@ -52,7 +52,6 @@
   .unit-select-wrapper { margin: 20px 0; }
   .unit-select-wrapper select.field { text-align: right; border-radius: 14px; padding: 14px 18px; }
   
-  /* الحاوية التي تمنع خروج الجدول عن الإطار وتضيف شريط تمرير عند الحاجة */
   .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; background: rgba(255,255,255,0.02); }
   .report-table { width: 100%; min-width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
   .report-table th, .report-table td { padding: 12px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
@@ -144,7 +143,7 @@
     <div style="text-align:center;margin-bottom:20px;border-bottom:1px solid rgba(251,191,36,0.2);padding-bottom:15px;"><h3 style="margin:0;color:var(--gold-main);" dir="ltr">YALYAN ACADEMY</h3></div>
     <div style="text-align:center;margin-bottom:30px">
       <h2 style="margin:0;color:#fff;font-size:26px;">نتيجة الاختبار</h2>
-      <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:50px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;border:2px solid var(--gold-main);"></div>
+      <div id="finalScoreBadge" style="display:inline-block;padding:15px 40px;border-radius:30px;background:#000;color:var(--gold-main);font-size:36px;font-weight:900;margin:20px 0;border:2px solid var(--gold-main);max-width:100%;"></div>
     </div>
     <div id="reviewRenderBox" style="max-height:500px;overflow-y:auto;margin-bottom:25px;"></div>
     <button type="button" class="btn" onclick="loadDashboard()" style="width:100%">العودة إلى اللوحة الرئيسية</button>
@@ -160,14 +159,12 @@ let studentCompletedExamIds = new Set();
 let globalStudentResults = [];
 let globalStudentExternalResults = {};
 let globalStudentVideos = [];
-let essayAnswers = {}; // صور الإجابات المقالية تبقى هنا حتى يتم تأكيد حفظها في الطابور
+let essayAnswers = {}; 
 let activeSubmissionId = "";
 let examSubmitInProgress = false;
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
-// ضغط الصورة قبل إرسالها: تصغير العرض لـ 900px وإعادة الترميز بصيغة JPEG بجودة 0.6
-// هذا يقلل حجم الصورة بشكل كبير جداً (من عدة ميجابايت إلى عشرات الكيلوبايت) قبل رفعها لتوفير سرعة الاتصال
 function compressImageToBase64(file, maxWidth = 900, quality = 0.6) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -257,7 +254,6 @@ async function loadDashboard() {
     
     globalStudentResults = data.results || [];
     
-    // دعم التوافقية حتى لو لم يتم تحديث الكود الخلفي
     let extRes = data.externalResults;
     globalStudentExternalResults = {};
     if (Array.isArray(extRes)) {
@@ -369,11 +365,9 @@ function renderMonthlyReport() {
   };
   const searchTerms = monthNames[targetMonth] || [];
 
-  // دالة ذكية جداً للبحث عن الشهر
   const isMatch = (dateStr, titleStr) => {
     const title = (titleStr || "").toLowerCase();
     if (searchTerms.some(term => title.includes(term))) return true;
-    
     if (dateStr) {
        let engDate = String(dateStr).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
        let nums = engDate.match(/\d+/g);
@@ -387,7 +381,6 @@ function renderMonthlyReport() {
   let foundAny = false;
   let htmlRows = "";
 
-  // 1. المنصة الإلكترونية
   globalStudentResults.forEach(r => {
     if (isMatch(r.date, r.examTitle)) {
       foundAny = true;
@@ -410,7 +403,6 @@ function renderMonthlyReport() {
     }
   });
 
-  // 2. الامتحانات الورقية والخارجية
   for (const [examName, score] of Object.entries(globalStudentExternalResults)) {
     if (isMatch("", examName)) {
       foundAny = true;
@@ -572,6 +564,7 @@ async function startExam(examId, encodedTitle) {
     });
   } catch(e) { document.getElementById('questionsRenderBox').innerHTML = `<div style='background:#111;color:#f87171;text-align:center;padding:20px;border-radius:15px;font-size:14px;'>${e.message}</div>`; }
 }
+
 async function submitExam() {
   if (examSubmitInProgress) return;
   examSubmitInProgress = true;
@@ -583,7 +576,6 @@ async function submitExam() {
   const essayItems = [];
   const essayIndexes = [];
 
-  // 1) تصحيح الأسئلة العادية محلياً كما كان من قبل.
   activeExamQuestions.forEach((q, idx) => {
     const qType = toStr(q.qType).toLowerCase();
     if (qType === 'essay') { essayIndexes.push(idx); return; }
@@ -609,7 +601,6 @@ async function submitExam() {
     };
   });
 
-  // 2) تجهيز كل إجابات المقال للطابور. لا نرسل Gemini من المتصفح.
   essayIndexes.forEach((idx) => {
     const q = activeExamQuestions[idx];
     const imgBase64 = essayAnswers[idx] || "";
@@ -659,7 +650,6 @@ async function submitExam() {
     const saved = await saveRes.json();
     if (!saved.success) throw new Error(saved.message || "تعذر حفظ الإجابات.");
 
-    // الآن أصبحت الإجابات محفوظة خارج المتصفح. يمكن حذف النسخ المحلية.
     essayAnswers = {};
 
     if (!essayItems.length) {
@@ -673,7 +663,6 @@ async function submitExam() {
       return;
     }
 
-    // 3) ننتظر النتيجة من الطابور. إذا كان Gemini مشغولاً فلن تضيع الإجابة.
     await pollEssaySubmission(activeSubmissionId, examTitle, reviewList, totalQuestions, finishBtn, statusMsg);
 
   } catch (e) {
@@ -687,7 +676,7 @@ async function submitExam() {
 
 async function pollEssaySubmission(submissionId, examTitle, initialReview, totalQuestions, finishBtn, statusMsg) {
   let attempts = 0;
-  while (attempts < 360) { // حتى 15 دقيقة تقريباً مع فاصل 5 ثوانٍ
+  while (attempts < 360) {
     attempts++;
     try {
       const res = await fetch(cfg.webAppUrl, {
@@ -717,28 +706,75 @@ async function pollEssaySubmission(submissionId, examTitle, initialReview, total
     await new Promise(resolve => setTimeout(resolve, 5000));
   }
 
-  // بعد 15 دقيقة لا نفقد الإجابة؛ فقط نبلغ الطالب أن التصحيح ما زال في الخلفية.
   finishBtn.disabled = false;
   examSubmitInProgress = false;
   finishBtn.textContent = "العودة للوحة الرئيسية";
   statusMsg.style.color = 'var(--gold-main)';
   statusMsg.textContent = "تم حفظ إجاباتك بأمان، والتصحيح ما زال يعمل في الخلفية. يمكنك العودة للوحة الرئيسية ثم فتح النتائج لاحقاً.";
 }
+
 function openPastReview(idx) {
   const r = globalStudentResults[idx]; if(!r || !r.reviewData) return;
   let parsedReview = []; try { parsedReview = JSON.parse(r.reviewData); } catch(e) { alert("تعذر تحميل المراجعة."); return; }
   renderReviewScreen(parsedReview, r.score);
 }
+
+// ============== التعديل الجديد على دالة عرض شاشة النتيجة والمراجعة ==============
 function renderReviewScreen(reviewList, scoreStr) {
-  document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'block'; document.getElementById('finalScoreBadge').textContent = scoreStr;
-  const reviewBox = document.getElementById('reviewRenderBox'); reviewBox.innerHTML = "";
+  document.getElementById('dashboardView').style.display = 'none';
+  document.getElementById('examView').style.display = 'none';
+  document.getElementById('reviewView').style.display = 'block';
+
+  let hasPendingEssay = false;
+  let objScore = 0;
+  let objTotal = 0;
+
+  // فحص الأسئلة لفصل درجات الموضوعي وتحديد ما إذا كان هناك مقالي معلق
+  reviewList.forEach((item) => {
+    if (!item) return;
+    if (item.qType === 'normal') {
+      objTotal++;
+      if (item.isCorrect) objScore++;
+    }
+    // إذا كان مقالي ودرجته غير موجودة أو تعذر التصحيح
+    if (item.qType === 'essay') {
+      if (item.essayScore === null || String(item.essayFeedback).includes('تعذر') || String(item.essayFeedback).includes('طابور')) {
+        hasPendingEssay = true;
+      }
+    }
+  });
+
+  const badgeBox = document.getElementById('finalScoreBadge');
+  
+  // تغيير الواجهة في حالة وجود أسئلة مقالية معلقة
+  if (hasPendingEssay) {
+    badgeBox.innerHTML = `
+      <div style="font-size:38px; font-weight:900;" dir="ltr">${objScore} / ${objTotal}</div>
+      <div style="font-size:14px; color:#fde047; margin-top:15px; font-weight:bold; line-height:1.6; border-top:1px dashed rgba(251,191,36,0.5); padding-top:12px;">
+        ⚠️ هذه الدرجة للأسئلة الموضوعية (الاختياري) فقط.<br>
+        يتبقى الأسئلة المقالية جاري تقييمها أو بانتظار مراجعة المعلم.
+      </div>
+    `;
+    badgeBox.style.padding = "20px 25px";
+  } else {
+    badgeBox.innerHTML = scoreStr;
+    badgeBox.style.padding = "15px 40px";
+  }
+
+  const reviewBox = document.getElementById('reviewRenderBox');
+  reviewBox.innerHTML = "";
+  
   reviewList.forEach((item, i) => {
     if (!item) return;
     if (item.qType === 'essay') {
+      // تغيير شكل عرض درجة المقالي إذا كانت قيد الانتظار
+      let scoreDisplay = item.essayScore === null ? '<span style="color:#fde047;">قيد الانتظار ⏳</span>' : `<b style="color:var(--gold-main);" dir="ltr">${item.essayScore} / 10</b>`;
+      let borderColor = item.essayScore >= 5 ? '#22c55e' : (item.essayScore === null ? '#eab308' : '#ef4444');
+
       reviewBox.innerHTML += `
-        <div style="border-radius:18px;padding:15px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:rtl;text-align:right;border-right:5px solid ${item.essayScore >= 5 ? '#22c55e' : '#ef4444'};">
+        <div style="border-radius:18px;padding:15px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:rtl;text-align:right;border-right:5px solid ${borderColor};">
           <div style="font-weight:bold;color:#fff;font-size:15px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question} <span class="pill" style="font-size:11px; margin-right:6px;">مقالي</span></div>
-          <div style="font-size:14px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">تقييم الذكاء الاصطناعي: <b style="color:var(--gold-main);" dir="ltr">${item.essayScore} / 10</b></div>
+          <div style="font-size:14px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">تقييم الذكاء الاصطناعي: ${scoreDisplay}</div>
           ${item.essayFeedback ? `<div style="font-size:13px;color:#ccc;background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;">${item.essayFeedback}</div>` : ''}
         </div>
       `;
@@ -753,6 +789,8 @@ function renderReviewScreen(reviewList, scoreStr) {
     `;
   });
 }
+// ====================================================================================
+
 function logout() { currentStudent = null; document.getElementById('studentCode').value = ''; document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'none'; document.getElementById('reviewView').style.display = 'none'; document.getElementById('loginView').style.display = 'block'; }
 </script>
 </body>
