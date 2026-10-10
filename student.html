@@ -165,6 +165,28 @@ let examSubmitInProgress = false;
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
+let examStartInProgress = false;
+let activeWatchId = "";
+const LOCAL_DONE_TTL_MS = 30 * 60 * 1000; // العلامة المحلية صالحة 30 دقيقة فقط؛ بعدها الخادم هو المرجع.
+
+function newSubmissionId() {
+  return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('YALYN-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+}
+function doneKey(title) {
+  return 'yalyn_done|' + toStr(currentStudent && currentStudent.name).toLowerCase() + '|' +
+         toStr(currentStudent && currentStudent.grade).toLowerCase() + '|' + toStr(title).toLowerCase();
+}
+function markExamDone(title) {
+  studentCompletedExamIds.add(toStr(title).toLowerCase());
+  try { localStorage.setItem(doneKey(title), String(Date.now())); } catch (e) {}
+}
+function isExamDoneLocally(title) {
+  try {
+    const t = Number(localStorage.getItem(doneKey(title)) || 0);
+    return t > 0 && (Date.now() - t) < LOCAL_DONE_TTL_MS;
+  } catch (e) { return false; }
+}
+
 function compressImageToBase64(file, maxWidth = 900, quality = 0.6) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -224,6 +246,7 @@ async function studentLogin() {
 }
 
 async function loadDashboard() {
+  activeWatchId = "";
   document.getElementById('loginView').style.display = 'none';
   document.getElementById('examView').style.display = 'none';
   document.getElementById('reviewView').style.display = 'none';
@@ -290,7 +313,7 @@ async function loadDashboard() {
     if(data.exams && data.exams.length > 0) {
       examsBox.innerHTML = "";
       data.exams.forEach(ex => {
-        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase());
+        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase()) || ex.taken === true || isExamDoneLocally(ex.examTitle);
         examsBox.innerHTML += `
           <div class="exam-item">
             ${isDone ? `<span class="pill-gray">مكتمل ✓</span>` : `<button class="btn" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`}
@@ -386,12 +409,15 @@ function renderMonthlyReport() {
       foundAny = true;
       let scoreText = r.score;
       let ratingBadge = "-";
-      const parsed = parseScoreString(scoreText);
+      const isPendingScore = String(scoreText).includes('قيد التقييم');
+      const parsed = isPendingScore ? null : parseScoreString(scoreText);
       if (parsed && parsed.max > 0) {
         totalObtained += parsed.obtained;
         totalMax += parsed.max;
         let percent = (parsed.obtained / parsed.max) * 100;
         ratingBadge = `<span style="background:${getRatingColor(percent)}25; color:${getRatingColor(percent)}; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:bold; white-space:nowrap;">${getRatingWord(percent)}</span>`;
+      } else if (isPendingScore) {
+        ratingBadge = `<span style="color:#fde047; font-size:11px; font-weight:bold; white-space:nowrap;">قيد التقييم ⏳</span>`;
       }
 
       htmlRows += `<tr>
@@ -511,7 +537,24 @@ function renderUnitVideos() {
 
 async function startExam(examId, encodedTitle) {
   const examTitle = decodeURIComponent(encodedTitle);
-  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
+  if (examStartInProgress) return;
+  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase()) || isExamDoneLocally(examTitle)) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
+  examStartInProgress = true;
+  try {
+    // الخادم هو المرجع: هل سلّم هذا الطالب هذا الامتحان من قبل؟
+    const chk = await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "checkExamAttempt", studentName: currentStudent.name, grade: currentStudent.grade, examTitle }) });
+    const chkData = await chk.json();
+    if (chkData && chkData.taken === true) {
+      markExamDone(examTitle);
+      alert("لقد أتممت هذا الاختبار مسبقاً.");
+      examStartInProgress = false;
+      loadDashboard();
+      return;
+    }
+  } catch (e) { /* إذا تعذر الفحص نكمل؛ الخادم سيرفض التكرار عند الإرسال على أي حال */ }
+  examStartInProgress = false;
+  activeSubmissionId = newSubmissionId();
+  examSubmitInProgress = false;
   document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'block'; document.getElementById('currentExamTitle').textContent = examTitle; document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:16px;'>جاري التجهيز...</div>";
   try {
     const res = await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade }) });
@@ -623,7 +666,8 @@ async function submitExam() {
 
   const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
   const examTitle = document.getElementById('currentExamTitle').textContent;
-  activeSubmissionId = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('YALYN-' + Date.now() + '-' + Math.random().toString(36).slice(2));
+  // نفس المعرّف يُستخدم عند إعادة المحاولة، والخادم يتجاهل التكرار بنفس المعرّف.
+  if (!activeSubmissionId) activeSubmissionId = newSubmissionId();
 
   finishBtn.textContent = "جاري حفظ الإجابات...";
   statusMsg.style.color = 'var(--gold-main)';
@@ -650,20 +694,30 @@ async function submitExam() {
     const saved = await saveRes.json();
     if (!saved.success) throw new Error(saved.message || "تعذر حفظ الإجابات.");
 
+    // الخادم استلم الإجابات: الامتحان أصبح مسجّلاً. لا ننتظر التصحيح.
+    markExamDone(examTitle);
     essayAnswers = {};
+    const submittedId = activeSubmissionId;
+    activeSubmissionId = "";
+    statusMsg.textContent = "";
+    finishBtn.disabled = false;
+    finishBtn.textContent = "إنهاء الامتحان (Finish)";
+    examSubmitInProgress = false;
 
-    if (!essayItems.length) {
-      const finalScoreString = `${normalScore} / ${totalQuestions}`;
-      studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-      statusMsg.textContent = "";
-      finishBtn.disabled = false;
-      finishBtn.textContent = "إنهاء الامتحان (Finish)";
-      examSubmitInProgress = false;
-      renderReviewScreen(reviewList, finalScoreString);
+    if (saved.duplicate) {
+      alert("لقد أتممت هذا الاختبار مسبقاً، ولا يمكن تسليمه مرة أخرى.");
+      loadDashboard();
       return;
     }
 
-    await pollEssaySubmission(activeSubmissionId, examTitle, reviewList, totalQuestions, finishBtn, statusMsg);
+    if (!essayItems.length) {
+      renderReviewScreen(reviewList, `${normalScore} / ${totalQuestions}`);
+      return;
+    }
+
+    // مقالي: اعرض الدرجة الموضوعية الآن، والدرجة النهائية تظهر هنا تلقائياً وفي سجل الدرجات.
+    renderReviewScreen(reviewList, `${normalScore} / ${totalQuestions}`);
+    watchEssayResult(submittedId);
 
   } catch (e) {
     statusMsg.style.color = '#f87171';
@@ -674,10 +728,13 @@ async function submitExam() {
   }
 }
 
-async function pollEssaySubmission(submissionId, examTitle, initialReview, totalQuestions, finishBtn, statusMsg) {
-  let attempts = 0;
-  while (attempts < 360) {
-    attempts++;
+// مراقبة هادئة في الخلفية: لا تحجب الطالب، وتتوقف عند خروجه من شاشة النتيجة.
+async function watchEssayResult(submissionId) {
+  activeWatchId = submissionId;
+  for (let i = 0; i < 60; i++) {
+    await new Promise(resolve => setTimeout(resolve, 5000));
+    if (activeWatchId !== submissionId) return;
+    if (document.getElementById('reviewView').style.display === 'none') return;
     try {
       const res = await fetch(cfg.webAppUrl, {
         method: "POST",
@@ -685,32 +742,14 @@ async function pollEssaySubmission(submissionId, examTitle, initialReview, total
         body: JSON.stringify({ action: "getEssaySubmissionStatus", submissionId: submissionId })
       });
       const data = await res.json();
-      if (data.success) {
-        const completed = Number(data.completed || 0);
-        const total = Number(data.total || 0);
-        if (data.status === "COMPLETED" && data.finalScore) {
-          let finalReview = initialReview;
-          try { if (data.reviewData) finalReview = JSON.parse(data.reviewData); } catch(e) {}
-          studentCompletedExamIds.add(toStr(examTitle).toLowerCase());
-          finishBtn.disabled = false;
-          finishBtn.textContent = "إنهاء الامتحان (Finish)";
-          statusMsg.textContent = "";
-          renderReviewScreen(finalReview, data.finalScore);
-          return;
-        }
-        statusMsg.textContent = `تم حفظ الإجابة بأمان. جاري التصحيح... (${completed}/${total})`;
+      if (data.success && data.status === "COMPLETED" && data.finalScore) {
+        let finalReview = null;
+        try { if (data.reviewData) finalReview = JSON.parse(data.reviewData); } catch (e) {}
+        if (activeWatchId === submissionId && finalReview) renderReviewScreen(finalReview, data.finalScore);
+        return;
       }
-    } catch (e) {
-      statusMsg.textContent = "الإجابة محفوظة، وجاري انتظار التصحيح...";
-    }
-    await new Promise(resolve => setTimeout(resolve, 5000));
+    } catch (e) { /* نحاول مرة أخرى */ }
   }
-
-  finishBtn.disabled = false;
-  examSubmitInProgress = false;
-  finishBtn.textContent = "العودة للوحة الرئيسية";
-  statusMsg.style.color = 'var(--gold-main)';
-  statusMsg.textContent = "تم حفظ إجاباتك بأمان، والتصحيح ما زال يعمل في الخلفية. يمكنك العودة للوحة الرئيسية ثم فتح النتائج لاحقاً.";
 }
 
 function openPastReview(idx) {
@@ -752,7 +791,8 @@ function renderReviewScreen(reviewList, scoreStr) {
       <div style="font-size:38px; font-weight:900;" dir="ltr">${objScore} / ${objTotal}</div>
       <div style="font-size:14px; color:#fde047; margin-top:15px; font-weight:bold; line-height:1.6; border-top:1px dashed rgba(251,191,36,0.5); padding-top:12px;">
         ⚠️ هذه الدرجة للأسئلة الموضوعية (الاختياري) فقط.<br>
-        يتبقى الأسئلة المقالية جاري تقييمها أو بانتظار مراجعة المعلم.
+        تم تسليم امتحانك، والأسئلة المقالية جاري تقييمها الآن.<br>
+        ستظهر درجتك النهائية هنا تلقائياً، وفي "سجل الدرجات السابقة" خلال دقائق.
       </div>
     `;
     badgeBox.style.padding = "20px 25px";
