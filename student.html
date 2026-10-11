@@ -85,7 +85,10 @@
       <button onclick="logout()" style="background:transparent;border:1px solid #ef4444;color:#ef4444;padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:bold;">خروج</button>
     </div>
 
-    <h3 style="font-size:18px;color:var(--text-main);margin:25px 0 15px;">📜 الامتحانات المتاحة:</h3>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:25px 0 15px;">
+      <h3 style="font-size:18px;color:var(--text-main);margin:0;">📜 الامتحانات المتاحة:</h3>
+      <button type="button" class="btn" onclick="loadDashboard()" style="padding:6px 12px;font-size:12px;">🔄 تحديث</button>
+    </div>
     <div id="examsListContainer"></div>
 
     <h3 style="font-size:18px;color:var(--text-main);margin:35px 0 15px;">🏆 سجل الدرجات السابقة:</h3>
@@ -134,7 +137,7 @@
       <span class="pill" id="questionCountBadge"></span>
     </div>
     <div id="questionsRenderBox"></div>
-    <button type="button" class="btn-login" id="finishExamBtn" onclick="submitExam()" style="margin-top:20px;">إنهاء الامتحان (Finish)</button>
+    <button type="button" class="btn-login" id="finishExamBtn" onclick="confirmSubmitExam()" style="margin-top:20px;">إنهاء الامتحان (Finish)</button>
     <div id="examStatusMsg" style="text-align:center;color:#f87171;margin-top:15px;font-weight:bold"></div>
   </div>
 
@@ -147,6 +150,16 @@
     </div>
     <div id="reviewRenderBox" style="max-height:500px;overflow-y:auto;margin-bottom:25px;"></div>
     <button type="button" class="btn" onclick="loadDashboard()" style="width:100%">العودة إلى اللوحة الرئيسية</button>
+  </div>
+</div>
+
+<div id="confirmOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.78);z-index:50;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#111;border:1px solid var(--gold-main);border-radius:20px;padding:24px;max-width:420px;width:100%;text-align:center;">
+    <div id="confirmText" style="color:#fff;font-size:16px;font-weight:700;line-height:1.9;margin-bottom:20px;white-space:pre-line;"></div>
+    <div style="display:flex;gap:10px;">
+      <button type="button" class="btn" id="confirmYes" style="flex:1;padding:12px;">نعم، أنهِ الامتحان</button>
+      <button type="button" class="btn" id="confirmNo" style="flex:1;padding:12px;background:#222;color:#fff;border-color:#555;">رجوع للمراجعة</button>
+    </div>
   </div>
 </div>
 
@@ -167,24 +180,44 @@ const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
 let examStartInProgress = false;
 let activeWatchId = "";
-const LOCAL_DONE_TTL_MS = 30 * 60 * 1000; // العلامة المحلية صالحة 30 دقيقة فقط؛ بعدها الخادم هو المرجع.
+let submitAttempted = false;
 
 function newSubmissionId() {
   return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('YALYN-' + Date.now() + '-' + Math.random().toString(36).slice(2));
 }
-function doneKey(title) {
-  return 'yalyn_done|' + toStr(currentStudent && currentStudent.name).toLowerCase() + '|' +
-         toStr(currentStudent && currentStudent.grade).toLowerCase() + '|' + toStr(title).toLowerCase();
-}
+// الخادم هو المرجع الوحيد لمعرفة هل أدّى الطالب الامتحان (لا نخزّن أي علامة في المتصفح).
 function markExamDone(title) {
   studentCompletedExamIds.add(toStr(title).toLowerCase());
-  try { localStorage.setItem(doneKey(title), String(Date.now())); } catch (e) {}
 }
-function isExamDoneLocally(title) {
-  try {
-    const t = Number(localStorage.getItem(doneKey(title)) || 0);
-    return t > 0 && (Date.now() - t) < LOCAL_DONE_TTL_MS;
-  } catch (e) { return false; }
+
+// عدد الأسئلة التي لم يُجب عنها الطالب بعد (لرسالة التأكيد قبل الإنهاء)
+function countUnanswered() {
+  let n = 0;
+  activeExamQuestions.forEach((q, idx) => {
+    const qType = toStr(q.qType).toLowerCase();
+    if (qType === 'essay') { if (!essayAnswers[idx]) n++; return; }
+    if (toStr(q.choice1) !== "") {
+      if (!document.querySelector(`input[name="q_${idx}"]:checked`)) n++;
+      return;
+    }
+    const inp = document.getElementById(`complete_ans_${idx}`);
+    if (!inp || !toStr(inp.value)) n++;
+  });
+  return n;
+}
+
+// نافذة تأكيد داخل الصفحة (لا تعتمد على window.confirm الذي تحجبه بعض المتصفحات الداخلية)
+function confirmSubmitExam() {
+  if (examSubmitInProgress) return;
+  if (submitAttempted) { submitExam(); return; }   // إعادة محاولة بعد فشل: بلا تأكيد جديد
+  const un = countUnanswered();
+  document.getElementById('confirmText').textContent =
+    (un > 0 ? `⚠️ لم تُجب عن ${un} سؤال.\n\n` : '') +
+    'هل أنت متأكد من إنهاء الامتحان؟\nلن تستطيع تعديل إجاباتك بعد الإنهاء.';
+  const ov = document.getElementById('confirmOverlay');
+  ov.style.display = 'flex';
+  document.getElementById('confirmNo').onclick = () => { ov.style.display = 'none'; };
+  document.getElementById('confirmYes').onclick = () => { ov.style.display = 'none'; submitAttempted = true; submitExam(); };
 }
 
 function compressImageToBase64(file, maxWidth = 900, quality = 0.6) {
@@ -313,7 +346,7 @@ async function loadDashboard() {
     if(data.exams && data.exams.length > 0) {
       examsBox.innerHTML = "";
       data.exams.forEach(ex => {
-        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase()) || ex.taken === true || isExamDoneLocally(ex.examTitle);
+        const isDone = studentCompletedExamIds.has(toStr(ex.examTitle).toLowerCase()) || ex.taken === true;
         examsBox.innerHTML += `
           <div class="exam-item">
             ${isDone ? `<span class="pill-gray">مكتمل ✓</span>` : `<button class="btn" onclick="startExam('${ex.examId}', '${encodeURIComponent(ex.examTitle)}')">بدء</button>`}
@@ -538,7 +571,7 @@ function renderUnitVideos() {
 async function startExam(examId, encodedTitle) {
   const examTitle = decodeURIComponent(encodedTitle);
   if (examStartInProgress) return;
-  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase()) || isExamDoneLocally(examTitle)) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
+  if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
   examStartInProgress = true;
   try {
     // الخادم هو المرجع: هل سلّم هذا الطالب هذا الامتحان من قبل؟
@@ -555,6 +588,7 @@ async function startExam(examId, encodedTitle) {
   examStartInProgress = false;
   activeSubmissionId = newSubmissionId();
   examSubmitInProgress = false;
+  submitAttempted = false;
   document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'block'; document.getElementById('currentExamTitle').textContent = examTitle; document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:16px;'>جاري التجهيز...</div>";
   try {
     const res = await fetch(cfg.webAppUrl, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify({ action: "getExamQuestions", examId, examTitle, grade: currentStudent.grade }) });
