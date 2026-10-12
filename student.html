@@ -162,6 +162,7 @@ let globalStudentExternalResults = {};
 let globalStudentVideos = [];
 let essayAnswers = {}; // صور الإجابات المقالية تبقى هنا حتى يتم تأكيد حفظها في الطابور
 let activeSubmissionId = "";
+let examSubmitInProgress = false; // <-- تم إضافة المتغير هنا لحل المشكلة
 
 const toStr = (v) => (v !== undefined && v !== null ? String(v).trim() : "");
 
@@ -327,7 +328,7 @@ async function loadDashboard() {
 function parseScoreString(scoreStr) {
   if (!scoreStr) return null;
   let engScore = String(scoreStr).replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d));
-  const match = engScore.match(/(\d+(?:\.\d+)?)\s*(?:\/|\\|-|من)\s*(\d+(?:\.\d+)?)/);
+  const match = engScore.match(/(\d+(?:\.\d+)?)\s*(?:\/|\|-|من)\s*(\d+(?:\.\d+)?)/);
   if (match) {
     return { obtained: parseFloat(match[1]), max: parseFloat(match[2]) };
   }
@@ -531,7 +532,7 @@ async function startExam(examId, encodedTitle) {
     activeExamQuestions.forEach((q, idx) => {
       const c1 = toStr(q.choice1), c2 = toStr(q.choice2), c3 = toStr(q.choice3), c4 = toStr(q.choice4); const isMcq = c1 !== "";
       const qType = toStr(q.qType).toLowerCase();
-      const rawUrl = toStr(q.image).replace(/[\'\"]/g, '').trim();
+      const rawUrl = toStr(q.image).replace(/['"]/g, '').trim();
       let fileId = toStr(q.imageFileId).trim();
       if (!fileId && rawUrl) {
         const drivePatterns = [
