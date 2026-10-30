@@ -182,6 +182,17 @@ body { margin: 0; color: var(--text-main); font-family: 'Inter', system-ui, sans
         <label class="muted">اختر الطالب لاستخراج تقريره:
           <select id="reportStudentSelect" class="field"><option value="">-- اختر الطالب --</option></select>
         </label>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+          <label class="muted">الشهر:
+            <select id="reportMonthSelect" class="field">
+              <option value="09">سبتمبر</option><option value="10" selected>أكتوبر</option><option value="11">نوفمبر</option><option value="12">ديسمبر</option>
+              <option value="01">يناير</option><option value="02">فبراير</option><option value="03">مارس</option><option value="04">أبريل</option><option value="05">مايو</option><option value="06">يونيو</option><option value="07">يوليو</option><option value="08">أغسطس</option>
+            </select>
+          </label>
+          <label class="muted">السنة:
+            <input id="reportYearSelect" class="field" type="number" min="2020" max="2100" value="2026">
+          </label>
+        </div>
         <button class="btn" style="background: linear-gradient(135deg, #34d399, #059669); color:#fff; border:0;" onclick="generateStudentMonthlyReport()">🔍 عرض وتوليد التقرير</button>
       </div>
     </div>
@@ -391,78 +402,92 @@ async function saveExternalExamScore() {
   } catch(e) { toast('خطأ في الاتصال بالخادم.'); }
 }
 
+function normalizeReportDigits(value) {
+  return String(value == null ? "" : value).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[\u200e\u200f\u202a-\u202e]/g, "").trim();
+}
+function reportMonthKey(value) {
+  if (!value) return "";
+  if (value instanceof Date && !isNaN(value)) return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,"0")}`;
+  let s = normalizeReportDigits(value).trim();
+  let m = s.match(/(20\d{2})[-/](\d{1,2})[-/](\d{1,2})/);
+  if (m) return `${m[1]}-${String(Number(m[2])).padStart(2,"0")}`;
+  m = s.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](20\d{2})/);
+  if (m) return `${m[3]}-${String(Number(m[2])).padStart(2,"0")}`;
+  const d = new Date(s);
+  if (!isNaN(d.getTime())) return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+  return "";
+}
+function parseReportScore(value, maxValue) {
+  const s = normalizeReportDigits(value).replace(/,/g,".").trim();
+  const m = s.match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
+  if (m) return {score:Number(m[1]), max:Number(m[2])};
+  const score = Number(s);
+  const max = Number(normalizeReportDigits(maxValue));
+  return {score:Number.isFinite(score) ? score : null, max:Number.isFinite(max) && maxValue !== "" ? max : null};
+}
+function escapeReportHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
 function generateStudentMonthlyReport() {
   const studentName = document.getElementById('reportStudentSelect').value;
   if(!studentName) { toast('اختر طالباً لعرض التقرير.'); return; }
+  const month = document.getElementById('reportMonthSelect').value;
+  const year = document.getElementById('reportYearSelect').value;
+  const monthKey = `${year}-${month}`;
   const stObj = globalStudents.find(s => s.name === studentName);
-  const onlineScores = globalResults.filter(r => r.name && r.name.trim() === studentName);
-  
-  // استخراج الدرجات الخارجية أفقياً
-  const extDataObj = globalExternalResults.find(r => r.studentName && r.studentName.trim() === studentName);
-  const extScores = [];
-  if (extDataObj && extDataObj.scores) {
-    for (const [eTitle, eScore] of Object.entries(extDataObj.scores)) {
-      if (eScore !== "") {
-        extScores.push({ examTitle: eTitle, score: eScore, date: "مدخل يدوياً" });
-      }
-    }
-  }
-  
+  const allOnline = globalResults.filter(r => r.name && r.name.trim() === studentName);
+  const onlineScores = allOnline.filter(r => reportMonthKey(r.date) === monthKey);
+  const monthArabicNames = {'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
+  const extScores = (globalExternalResults || []).filter(r => {
+    if (!r.studentName || r.studentName.trim() !== studentName) return false;
+    if (r.monthKey === monthKey) return true;
+    if (!r.monthKey && r.examTitle && monthArabicNames[month] && r.examTitle.includes(monthArabicNames[month])) return true;
+    return false;
+  });
+  const allRows = [];
+  onlineScores.forEach(r => allRows.push({examTitle:r.examTitle, type:'المنصة الإلكترونية', score:r.score, date:r.date, kind:'online'}));
+  extScores.forEach(r => allRows.push({examTitle:r.examTitle, type:'اختبار ورقي / خارجي', score:(r.maxScore !== '' && r.maxScore != null) ? `${r.score} / ${r.maxScore}` : r.score, date:r.date, kind:'paper'}));
+  allRows.sort((a,b) => String(a.date).localeCompare(String(b.date)));
+  let earned = 0, possible = 0, counted = 0;
+  allRows.forEach(r => { const p = parseReportScore(r.score); if (p.score !== null && p.max !== null && p.max > 0) { earned += p.score; possible += p.max; counted++; } });
+  const pct = possible > 0 ? Math.round(earned / possible * 100) : null;
+  const rowsHtml = allRows.length ? allRows.map(r => `<tr>
+    <td style="padding:10px;border:1px solid #ddd;">${escapeReportHtml(r.examTitle)}</td>
+    <td style="padding:10px;border:1px solid #ddd;text-align:center;">${escapeReportHtml(r.type)}</td>
+    <td style="padding:10px;border:1px solid #ddd;text-align:center;font-weight:bold;color:#15803d;" dir="ltr">${escapeReportHtml(r.score)}</td>
+    <td style="padding:10px;border:1px solid #ddd;text-align:center;color:#666;">${escapeReportHtml(r.date || 'غير محدد')}</td>
+  </tr>`).join('') : `<tr><td colspan="4" style="padding:20px;text-align:center;color:#888;">لا توجد درجات مسجلة لهذا الطالب في الشهر المحدد.</td></tr>`;
+  const monthNames = {'01':'يناير','02':'فبراير','03':'مارس','04':'أبريل','05':'مايو','06':'يونيو','07':'يوليو','08':'أغسطس','09':'سبتمبر','10':'أكتوبر','11':'نوفمبر','12':'ديسمبر'};
   const reportArea = document.getElementById('printReportArea');
-  const previewCard = document.getElementById('reportPreviewCard');
-  let rowsHtml = "";
-  
-  onlineScores.forEach(r => {
-    rowsHtml += `<tr>
-      <td style="padding:10px; border:1px solid #ddd;">${r.examTitle}</td>
-      <td style="padding:10px; border:1px solid #ddd; text-align:center;"><span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:6px; font-weight:bold;">المنصة الإلكترونية</span></td>
-      <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#15803d;" dir="ltr">${r.score}</td>
-      <td style="padding:10px; border:1px solid #ddd; text-align:center; color:#666;">${r.date}</td>
-    </tr>`;
-  });
-  extScores.forEach(r => {
-    rowsHtml += `<tr>
-      <td style="padding:10px; border:1px solid #ddd;">${r.examTitle}</td>
-      <td style="padding:10px; border:1px solid #ddd; text-align:center;"><span style="background:#fef3c7; color:#b45309; padding:3px 8px; border-radius:6px; font-weight:bold;">اختبار ورقي / خارجي</span></td>
-      <td style="padding:10px; border:1px solid #ddd; text-align:center; font-weight:bold; color:#15803d;" dir="ltr">${r.score}</td>
-      <td style="padding:10px; border:1px solid #ddd; text-align:center; color:#666;">${r.date}</td>
-    </tr>`;
-  });
-  if(onlineScores.length === 0 && extScores.length === 0) { rowsHtml = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#888;">لا توجد درجات مسجلة لهذا الطالب حتى الآن.</td></tr>`; }
-  
   reportArea.innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #fbbf24; padding-bottom:15px; margin-bottom:20px;">
-      <div><h2 style="margin:0; color:#000;">🎓 YALYN Academy</h2><p style="margin:5px 0 0; color:#666; font-size:14px;">التقرير الشهري لمتابعة أداء الطالب</p></div>
-      <div style="text-align:left;"><h3 style="margin:0; color:#b45309;">تاريخ التقرير</h3><span style="font-size:14px; color:#444;">${new Date().toLocaleDateString('ar-EG')}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #d4a72c;padding-bottom:15px;margin-bottom:20px;">
+      <div><h2 style="margin:0;color:#111;">🎓 YALYN ACADEMY</h2><p style="margin:5px 0 0;color:#666;">التقرير الشهري لمتابعة أداء الطالب</p></div>
+      <div style="text-align:left;"><h3 style="margin:0;color:#9a6700;">${monthNames[month]} ${year}</h3><span style="font-size:12px;color:#666;">تاريخ إصدار التقرير: ${new Date().toLocaleDateString('ar-EG')}</span></div>
     </div>
-    <div style="background:#f8fafc; border-radius:10px; padding:15px; margin-bottom:20px; display:grid; grid-template-columns:1fr 1fr; gap:10px; border:1px solid #e2e8f0;">
-      <div><b>اسم الطالب:</b> ${stObj ? stObj.name : studentName}</div><div><b>الصف الدراسي:</b> ${stObj ? stObj.grade : '-'}</div>
-      <div><b>كود الطالب:</b> ${stObj ? stObj.code : '-'}</div><div><b>هاتف ولي الأمر:</b> ${stObj ? stObj.phone : '-'}</div>
+    <div style="background:#f8fafc;border-radius:10px;padding:15px;margin-bottom:18px;display:grid;grid-template-columns:1fr 1fr;gap:10px;border:1px solid #e2e8f0;">
+      <div><b>اسم الطالب:</b> ${escapeReportHtml(stObj ? stObj.name : studentName)}</div><div><b>الصف الدراسي:</b> ${escapeReportHtml(stObj ? stObj.grade : '-')}</div>
+      <div><b>كود الطالب:</b> ${escapeReportHtml(stObj ? stObj.code : '-')}</div><div><b>عدد التقييمات:</b> ${allRows.length}</div>
     </div>
-    <h4 style="margin-bottom:10px; color:#1e293b;">📊 سجل الاختبارات والتقييمات:</h4>
-    <table style="width:100%; border-collapse:collapse; margin-bottom:20px; font-size:14px;">
-      <thead><tr style="background:#f1f5f9; color:#334155;">
-          <th style="padding:10px; border:1px solid #cbd5e1; text-align:right;">عنوان الامتحان / التقييم</th>
-          <th style="padding:10px; border:1px solid #cbd5e1; text-align:center;">نوع التقييم</th>
-          <th style="padding:10px; border:1px solid #cbd5e1; text-align:center;">الدرجة</th>
-          <th style="padding:10px; border:1px solid #cbd5e1; text-align:center;">التاريخ</th>
-      </tr></thead>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+      <div style="background:#eff6ff;padding:13px;border-radius:10px;text-align:center;"><div style="font-size:12px;color:#475569;">الدرجة المحصلة</div><b dir="ltr">${counted ? earned : '—'}</b></div>
+      <div style="background:#f0fdf4;padding:13px;border-radius:10px;text-align:center;"><div style="font-size:12px;color:#475569;">النهاية العظمى</div><b dir="ltr">${counted ? possible : '—'}</b></div>
+      <div style="background:#fffbeb;padding:13px;border-radius:10px;text-align:center;"><div style="font-size:12px;color:#475569;">نسبة الأداء الإجمالية</div><b>${pct === null ? '—' : pct + '%'}</b></div>
+    </div>
+    <h4 style="margin-bottom:10px;color:#1e293b;">📊 سجل اختبارات ${monthNames[month]}:</h4>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:20px;font-size:14px;">
+      <thead><tr style="background:#f1f5f9;color:#334155;"><th style="padding:10px;border:1px solid #cbd5e1;text-align:right;">عنوان الامتحان</th><th style="padding:10px;border:1px solid #cbd5e1;">نوع التقييم</th><th style="padding:10px;border:1px solid #cbd5e1;">الدرجة</th><th style="padding:10px;border:1px solid #cbd5e1;">التاريخ</th></tr></thead>
       <tbody>${rowsHtml}</tbody>
     </table>
-    <div style="margin-top:30px; border-top:1px dashed #ccc; padding-top:15px; display:flex; justify-content:space-between; font-size:13px; color:#555;">
-      <span>توقيع المعلم المسؤول: ..........................</span><span>خاتم الأكاديمية</span>
-    </div>
-  `;
-  
+    <div style="margin-top:28px;border-top:1px dashed #ccc;padding-top:15px;display:flex;justify-content:space-between;font-size:13px;color:#555;"><span>توقيع المعلم المسؤول: ..........................</span><span>خاتم الأكاديمية</span></div>`;
   const waBtn = document.getElementById('sendReportWaBtn');
   if(stObj && stObj.phone) {
-    let formattedPhone = formatPhoneNumber(stObj.phone);
-    let onlineText = ""; onlineScores.forEach(r => { onlineText += `   ▫️ ${r.examTitle}: *${r.score}*\n`; }); if(!onlineText) onlineText = "   لا توجد اختبارات إلكترونية مسجلة.\n";
-    let extText = ""; extScores.forEach(r => { extText += `   ▫️ ${r.examTitle}: *${r.score}*\n`; }); if(!extText) extText = "   لا توجد اختبارات ورقية مسجلة.\n";
-    const textMsg = encodeURIComponent(`🎓 *YALYN Academy*\nالتقرير الشهري لمتابعة الطالب/ة *${stObj.name}*\nالصف الدراسي: ${stObj.grade}\n━━━━━━━━━━━━━━━\n💻 *الاختبارات الإلكترونية*\n${onlineText}\n📝 *الاختبارات الورقية*\n${extText}━━━━━━━━━━━━━━━\n✅ إجمالي الاختبارات: ${onlineScores.length + extScores.length}\nنتمنى للطالب المزيد من التوفيق والنجاح 🌟`);
+    const formattedPhone = formatPhoneNumber(stObj.phone);
+    const details = allRows.map(r => `▫️ ${r.examTitle}: ${r.score}`).join('\n') || 'لا توجد اختبارات مسجلة.';
+    const textMsg = encodeURIComponent(`🎓 *YALYN Academy*\nالتقرير الشهري للطالب *${stObj.name}*\nالصف: ${stObj.grade}\nالشهر: ${monthNames[month]} ${year}\n━━━━━━━━━━━━━━━\n${details}\n━━━━━━━━━━━━━━━\nعدد التقييمات: ${allRows.length}\nنسبة الأداء الإجمالية: ${pct === null ? 'غير متاحة' : pct + '%'}\nنتمنى للطالب المزيد من التوفيق والنجاح 🌟`);
     waBtn.href = `https://wa.me/${formattedPhone}?text=${textMsg}`; waBtn.style.display = "inline-flex";
   } else { waBtn.style.display = "none"; }
-  previewCard.style.display = 'block'; toast('تم توليد التقرير بنجاح.');
+  document.getElementById('reportPreviewCard').style.display = 'block';
+  toast(`تم توليد تقرير ${monthNames[month]} ${year}.`);
 }
 window.onload = () => { loadTeacherDashboard(); };
 </script>
