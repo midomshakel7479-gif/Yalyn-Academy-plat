@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -257,10 +257,15 @@ async function loadDashboard() {
     
     let extRes = data.externalResults;
     globalStudentExternalResults = {};
+    window.globalStudentExternalRawList = [];
     if (Array.isArray(extRes)) {
+        window.globalStudentExternalRawList = extRes;
         extRes.forEach(item => {
-            if (item.examTitle && item.score) {
-                globalStudentExternalResults[item.examTitle] = item.score;
+            if (item.examTitle && item.score !== undefined && String(item.score).trim() !== "") {
+                const fullScore = (item.maxScore !== undefined && item.maxScore !== null && String(item.maxScore).trim() !== "" && !String(item.score).includes("/"))
+                    ? `${item.score} / ${item.maxScore}`
+                    : String(item.score);
+                globalStudentExternalResults[item.examTitle] = fullScore;
             }
         });
     } else if (typeof extRes === 'object' && extRes !== null) {
@@ -405,16 +410,25 @@ function renderMonthlyReport() {
     }
   });
 
-  for (const [examName, score] of Object.entries(globalStudentExternalResults)) {
-    if (isMatch("", examName)) {
+  const rawExtList = Array.isArray(window.globalStudentExternalRawList) && window.globalStudentExternalRawList.length > 0
+    ? window.globalStudentExternalRawList
+    : Object.entries(globalStudentExternalResults).map(([examTitle, score]) => ({ examTitle, score, maxScore: "", date: "", monthKey: "" }));
+
+  rawExtList.forEach(item => {
+    const examName = item.examTitle || "";
+    const itemMonthNum = item.monthKey && item.monthKey.includes("-") ? parseInt(item.monthKey.split("-")[1], 10) : null;
+    if (itemMonthNum === targetMonth || isMatch(item.date || "", examName)) {
       foundAny = true;
-      let scoreText = score;
+      const combinedScore = (item.maxScore !== undefined && item.maxScore !== null && String(item.maxScore).trim() !== "" && !String(item.score).includes("/"))
+        ? `${item.score} / ${item.maxScore}`
+        : String(item.score ?? "");
+      let scoreText = combinedScore;
       let ratingBadge = "-";
 
-      if (!score || String(score).trim() === "") {
+      if (!combinedScore || String(combinedScore).trim() === "") {
         scoreText = `<span style="color:#ef4444; font-size:11px; font-weight:bold; white-space:nowrap;">لم يؤدِ الامتحان</span>`;
       } else {
-        const parsed = parseScoreString(score);
+        const parsed = parseScoreString(combinedScore);
         if (parsed && parsed.max > 0) {
           totalObtained += parsed.obtained;
           totalMax += parsed.max;
@@ -430,7 +444,7 @@ function renderMonthlyReport() {
                 <td>${ratingBadge}</td>
                </tr>`;
     }
-  }
+  });
 
   if (!foundAny) {
     box.innerHTML = `<div style="text-align:center; padding:15px; background:rgba(255,0,0,0.1); border-radius:12px; color:#f87171; font-size:14px;">لا توجد درجات مسجلة لك في هذا الشهر.</div>`;
@@ -768,10 +782,13 @@ function renderReviewScreen(reviewList, scoreStr) {
   reviewList.forEach((item, i) => {
     if (!item) return;
     if (item.qType === 'essay') {
+      const displayEssayOut10 = (item.essayScoreOutOf10 !== undefined && item.essayScoreOutOf10 !== null)
+        ? item.essayScoreOutOf10
+        : (item.essayScore !== null && item.essayScore !== undefined && item.essayScore <= 1 && item.essayScore > 0 ? Math.round(item.essayScore * 10 * 10) / 10 : (item.essayScore ?? 0));
       reviewBox.innerHTML += `
-        <div style="border-radius:18px;padding:15px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:rtl;text-align:right;border-right:5px solid ${item.essayScore >= 5 ? '#22c55e' : '#ef4444'};">
+        <div style="border-radius:18px;padding:15px;margin-bottom:15px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.1);direction:rtl;text-align:right;border-right:5px solid ${displayEssayOut10 >= 5 ? '#22c55e' : '#ef4444'};">
           <div style="font-weight:bold;color:#fff;font-size:15px;margin-bottom:10px;"><span style="color:var(--gold-main);">${i + 1}.</span> ${item.question} <span class="pill" style="font-size:11px; margin-right:6px;">مقالي</span></div>
-          <div style="font-size:14px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">تقييم الذكاء الاصطناعي: <b style="color:var(--gold-main);" dir="ltr">${item.essayScore} / 10</b></div>
+          <div style="font-size:14px;margin-bottom:8px;background:#000;padding:10px;border-radius:8px;">تقييم الذكاء الاصطناعي: <b style="color:var(--gold-main);" dir="ltr">${displayEssayOut10} / 10</b></div>
           ${item.essayFeedback ? `<div style="font-size:13px;color:#ccc;background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;">${item.essayFeedback}</div>` : ''}
         </div>
       `;
