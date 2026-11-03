@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -52,7 +52,6 @@
   .unit-select-wrapper { margin: 20px 0; }
   .unit-select-wrapper select.field { text-align: right; border-radius: 14px; padding: 14px 18px; }
   
-  /* الحاوية التي تمنع خروج الجدول عن الإطار وتضيف شريط تمرير عند الحاجة */
   .table-responsive { width: 100%; overflow-x: auto; border-radius: 12px; background: rgba(255,255,255,0.02); }
   .report-table { width: 100%; min-width: 100%; border-collapse: collapse; font-size: 13px; table-layout: auto; }
   .report-table th, .report-table td { padding: 12px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); text-align: center; }
@@ -255,26 +254,12 @@ async function loadDashboard() {
     
     globalStudentResults = data.results || [];
     
-    let extRes = data.externalResults;
-    globalStudentExternalResults = {};
-    window.globalStudentExternalRawList = [];
-    if (Array.isArray(extRes)) {
-        window.globalStudentExternalRawList = extRes;
-        extRes.forEach(item => {
-            if (item.examTitle && item.score !== undefined && String(item.score).trim() !== "") {
-                const fullScore = (item.maxScore !== undefined && item.maxScore !== null && String(item.maxScore).trim() !== "" && !String(item.score).includes("/"))
-                    ? `${item.score} / ${item.maxScore}`
-                    : String(item.score);
-                globalStudentExternalResults[item.examTitle] = fullScore;
-            }
-        });
-    } else if (typeof extRes === 'object' && extRes !== null) {
-        globalStudentExternalResults = extRes;
-    }
-    
+    // تسجيل الامتحانات المكتملة لمنع إعادة الاختبار
     if(globalStudentResults.length > 0) {
       globalStudentResults.forEach((r, idx) => {
-        studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
+        if (r.examTitle) {
+          studentCompletedExamIds.add(toStr(r.examTitle).toLowerCase());
+        }
         const reviewBtn = r.reviewData ? `<button class="btn" onclick="openPastReview(${idx})" style="padding:4px 10px;font-size:12px;">مراجعة</button>` : '';
         historyBox.innerHTML += `
           <div class="exam-item">
@@ -291,6 +276,23 @@ async function loadDashboard() {
       });
     } else {
       historyBox.innerHTML = "<div style='background:#111;padding:15px;border-radius:12px;color:#777;text-align:center;font-size:14px;'>لا توجد درجات سابقة.</div>";
+    }
+
+    let extRes = data.externalResults;
+    globalStudentExternalResults = {};
+    window.globalStudentExternalRawList = [];
+    if (Array.isArray(extRes)) {
+        window.globalStudentExternalRawList = extRes;
+        extRes.forEach(item => {
+            if (item.examTitle && item.score !== undefined && String(item.score).trim() !== "") {
+                const fullScore = (item.maxScore !== undefined && item.maxScore !== null && String(item.maxScore).trim() !== "" && !String(item.score).includes("/"))
+                    ? `${item.score} / ${item.maxScore}`
+                    : String(item.score);
+                globalStudentExternalResults[item.examTitle] = fullScore;
+            }
+        });
+    } else if (typeof extRes === 'object' && extRes !== null) {
+        globalStudentExternalResults = extRes;
     }
 
     if(data.exams && data.exams.length > 0) {
@@ -529,7 +531,7 @@ async function startExam(examId, encodedTitle) {
   const examTitle = decodeURIComponent(encodedTitle);
   if(studentCompletedExamIds.has(toStr(examTitle).toLowerCase())) { alert("لقد أتممت هذا الاختبار مسبقاً."); return; }
   
-  examSubmitInProgress = false; // تصفير العداد لضمان عدم تعليق الزر عند بدء امتحان جديد
+  examSubmitInProgress = false; 
   
   document.getElementById('dashboardView').style.display = 'none'; document.getElementById('examView').style.display = 'block'; document.getElementById('currentExamTitle').textContent = examTitle; document.getElementById('questionsRenderBox').innerHTML = "<div style='text-align:center;padding:40px;color:var(--gold-main);font-size:16px;'>جاري التجهيز...</div>";
   try {
@@ -615,7 +617,6 @@ async function submitExam() {
   const finishBtn = document.getElementById('finishExamBtn');
   const statusMsg = document.getElementById('examStatusMsg');
   
-  // تغليف كامل العملية בـ Try Catch لاصطياد أي خطأ مهما كان
   try {
     finishBtn.disabled = true;
     statusMsg.style.color = 'var(--gold-main)';
@@ -626,7 +627,6 @@ async function submitExam() {
     const essayItems = [];
     const essayIndexes = [];
 
-    // 1) تصحيح الأسئلة العادية محلياً
     activeExamQuestions.forEach((q, idx) => {
       const qType = toStr(q.qType).toLowerCase();
       if (qType === 'essay') { essayIndexes.push(idx); return; }
@@ -652,7 +652,6 @@ async function submitExam() {
       };
     });
 
-    // 2) تجهيز كل إجابات المقال
     essayIndexes.forEach((idx) => {
       const q = activeExamQuestions[idx];
       const imgBase64 = essayAnswers[idx] || "";
@@ -676,7 +675,6 @@ async function submitExam() {
     const totalQuestions = activeExamQuestions.length > 0 ? activeExamQuestions.length : 15;
     const examTitle = document.getElementById('currentExamTitle').textContent;
     
-    // الحل الجذري لمنع الانهيار الصامت في متصفحات الجوال عند توليد ID
     activeSubmissionId = (window.crypto && window.crypto.randomUUID) 
       ? window.crypto.randomUUID() 
       : ('YALYN-' + Date.now() + '-' + Math.random().toString(36).slice(2));
@@ -721,10 +719,8 @@ async function submitExam() {
     await pollEssaySubmission(activeSubmissionId, examTitle, reviewList, totalQuestions, finishBtn, statusMsg);
 
   } catch (e) {
-    // إظهار التنبيه للطالب ولمساعدتك في معرفة الخطأ بدقة لو حدث
     console.error(e);
     alert("حدث خطأ أثناء إنهاء الامتحان: " + e.message);
-    
     statusMsg.style.color = '#f87171';
     statusMsg.textContent = "تعذر الإرسال. لا تغلق الصفحة وحاول مرة أخرى.";
     finishBtn.disabled = false;
